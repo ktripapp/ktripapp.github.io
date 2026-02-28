@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>로또 T아이 - LottoAI</title>
+  <!-- AdSense script: insert into head to load ads library -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
+          crossorigin="anonymous"></script>
+
+  <!-- Meta verification placeholder (replace content with your code) -->
+  <meta name="google-adsense-account" content="ca-pub-8900421212808751">
+
+  <style>
+    :root{--cell-size:44px;--gap:10px}
+    html,body{height:100%;margin:0;padding:18px;font-family:AppleSDGothicNeo, 'Nanum Gothic', Arial, sans-serif;background:#fafafa;color:#222}
+    h1{font-size:2.2rem;margin:6px 0}
+    .meta{font-weight:600;margin-bottom:10px}
+    .controls{margin:12px 0}
+    .btn{display:inline-block;padding:10px 18px;background:#f0f0f0;border-radius:8px;border:none;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.06);transition:transform .12s}
+    .btn:hover{transform:translateY(-2px)}
+    .board{margin-top:16px}
+    .sets{display:flex;flex-wrap:wrap;gap:12px}
+    .set{display:inline-flex;align-items:center;gap:8px;padding:6px}
+    .circle{width:var(--cell-size);height:var(--cell-size);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .dark-yellow{background:#FFD700;color:#222}
+    .blue{background:#2f6fff}
+    .red{background:#f24d4d}
+    .gray{background:#9aa0a6}
+    .green{background:#2fbf4a}
+    .note{margin-top:16px;color:#666}
+    .banner{margin:22px 0;text-align:center}
+    @media (max-width:520px){:root{--cell-size:36px}.sets{gap:8px}}
+  </style>
+</head>
+<body>
+  <h1>로또 T아이</h1>
+  <div class="meta" id="roundInfo">로딩 중...</div>
+
+  <div class="controls">
+    <button id="genBtn" class="btn">로또번호 5세트 생성</button>
+  </div>
+
+  <div class="board">
+    <div id="result" class="sets" aria-live="polite"></div>
+    <div class="note">로또번호 정보만 제공하며, 투자의 책임은 본인에게 있습니다.</div>
+  </div>
+
+  <div class="banner">
+    <iframe src="https://coupa.ng/cf3Jkx" width="320" height="90" frameborder="0" scrolling="no" referrerpolicy="unsafe-url"></iframe>
+  </div>
+
+  <script>
+    // 날짜 및 회차 계산 (기준일: 2024-08-24)
+    (function(){
+      const startDate = new Date(Date.UTC(2024,7,24)); // month 7 = Aug (0-indexed)
+      const now = new Date();
+      const diffDays = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - startDate.getTime()) / (24*3600*1000));
+      const weeks = Math.floor(diffDays / 7);
+      const startRound = 1135;
+      const currentRound = startRound + weeks;
+
+      // 다음 토요일 날짜 (JS: 6=Saturday)
+      const weekday = now.getDay();
+      const daysUntilSat = (6 - weekday + 7) % 7;
+      const saturday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSat);
+
+      const y = saturday.getFullYear();
+      const m = String(saturday.getMonth()+1).padStart(2,'0');
+      const d = String(saturday.getDate()).padStart(2,'0');
+      const dateStr = `${y}.${m}.${d}`;
+
+      document.getElementById('roundInfo').textContent = `${currentRound}회차 (${dateStr})`;
+    })();
+
+    // number generation
+    function randSet(){
+      const nums = Array.from({length:45},(_,i)=>i+1);
+      for(let i=nums.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [nums[i],nums[j]]=[nums[j],nums[i]];
+      }
+      return nums.slice(0,6).sort((a,b)=>a-b);
+    }
+
+    function colorClass(n){
+      if(n>=1 && n<=10) return 'dark-yellow';
+      if(n<=20) return 'blue';
+      if(n<=30) return 'red';
+      if(n<=40) return 'gray';
+      return 'green';
+    }
+
+    function renderSets(sets){
+      const root = document.getElementById('result');
+      root.innerHTML='';
+      sets.forEach((set,idx)=>{
+        const container = document.createElement('div');
+        container.className='set';
+        const label = document.createElement('div');
+        label.textContent = (idx+1) + '세트:';
+        label.style.fontWeight='600';
+        label.style.marginRight='6px';
+        container.appendChild(label);
+        set.forEach(n=>{
+          const c = document.createElement('div');
+          c.className = 'circle ' + colorClass(n);
+          c.textContent = n;
+          container.appendChild(c);
+        });
+        root.appendChild(container);
+      });
+    }
+
+    document.getElementById('genBtn').addEventListener('click', function(){
+      const all = [];
+      for(let i=0;i<5;i++) all.push(randSet());
+      renderSets(all);
+    });
+  </script>
+</body>
+</html>
+                "ip": ip,
+                "user_agent": user_agent,
+                "user_id": user_id,
+            }
+            collection.insert_one(visit_data)
+        except Exception:
+            # fail silently to avoid breaking the app if DB errors occur
+            pass
+
+if "visited" not in st.session_state:
+    log_visit()
+    st.session_state.visited = True
+if collection is not None:
+    total_count, today_count = fetch_counts()
+
+    col1, col2 = st.sidebar.columns(2)
+    col1.markdown(
+        f"<div style='width:100%;text-align:center;padding:6px 0;'>"
+        f"<div style='font-size:16px;margin-bottom:4px'>오늘 방문자 수</div>"
+        f"<div style='font-size:16px;font-weight:600'>{today_count}</div></div>",
+        unsafe_allow_html=True,
+    )
+    col2.markdown(
+        f"<div style='width:100%;text-align:center;padding:6px 0;'>"
+        f"<div style='font-size:16px;margin-bottom:4px'>총 방문자 수</div>"
+        f"<div style='font-size:16px;font-weight:600'>{total_count}</div></div>",
+        unsafe_allow_html=True,
+    )
+else:
+    st.sidebar.info("데이터베이스 연결이 없어 통계 미표시")
+
+# ads.txt 직접 반환
+query_params = st.query_params
+path = query_params.get("path", [""])[0] if query_params else ""
+
+# Streamlit has no `requested_page` attribute. Some hosting platforms
+# may pass a `path` query param when requesting a specific file
+# (e.g. ?path=ads.txt). Fallback to checking `path` for ads.txt.
+# Some older deployments or custom builds may set `st.requested_page`.
+# Check it safely with getattr to avoid AttributeError on newer Streamlit.
+requested_page = getattr(st, "requested_page", None)
+if requested_page == "ads.txt" or path == "ads.txt":
+    st.text("google.com, pub-8900421212808751, DIRECT, f08c47fec0942fa0")
+    st.stop()
+
+adsense_code = """
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
+     crossorigin="anonymous"></script>"""
