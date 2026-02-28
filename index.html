@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>로또 T아이 - LottoAI</title>
+  <title>케이트립 갓생 플랫폼</title>
   <!-- AdSense script: insert into head to load ads library -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
           crossorigin="anonymous"></script>
@@ -74,29 +74,39 @@
     <section class="hero">
       <div class="hero-text">
         <h2>5세트의 로또 번호를 즉시 생성하세요</h2>
-        <p>깔끔하고 반응형 디자인 — 모바일에서도 편하게 사용하실 수 있습니다. 외부에 배포된 게임 링크도 아래에서 확인하세요.</p>
+        <p>깔끔한 반응형 디자인으로 모바일에서도 편하게 사용하실 수 있습니다. 1213회 당첨번호 학습모델하여 생성한 로또 번호를 로그인 없이 확인해보세요.</p>
       </div>
       <div class="hero-actions">
-        <button id="genBtn" class="btn">번호 5세트 생성</button>
-        <a class="btn secondary" href="#games">게임 보러가기</a>
+        <button id="resampleModelBtn" class="btn">모델로 5세트 생성</button>
+        <label style="display:flex;align-items:center;gap:8px;color:#475569;font-size:0.95rem">
+          <span>쿨다운(분)</span>
+          <input id="cooldownMinutes" type="number" min="1" step="1" value="1" style="width:90px;padding:6px;border-radius:8px;border:1px solid #e6eefc" />
+        </label>
       </div>
+        <div id="nextAllowedInfo" style="margin-top:8px;text-align:center;color:#0b57d0;font-weight:600"></div>
     </section>
 
     <!-- games section moved below the lotto results -->
 
     <section class="board" id="lotto">
+      <div id="displayRound" style="text-align:center;color:#0b57d0;font-weight:700;margin-bottom:6px"></div>
       <div style="text-align:center;color:#64748b;font-size:0.95rem;margin-bottom:12px;">로또번호 정보만 제공하며, 책임은 본인에게 있습니다.</div>
-      <div id="result" class="sets" aria-live="polite"></div>
+      <!-- result removed: random-generated sets disabled -->
+
+      <section id="prediction" style="margin-top:18px;text-align:center">
+        <div id="modelSets" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:12px;"></div>
+        <div style="color:#64748b;font-size:0.9rem;margin-top:10px">위 숫자는 모델 기반 샘플링으로 생성된 5세트입니다. 참고용입니다.</div>
+      </section>
     </section>
 
     <div id="after-lotto">
       <section id="games" class="cards" aria-label="외부 게임 목록">
         <article class="card">
           <div class="card-body">
-            <div class="card-title">전체 게임</div>
-            <div class="card-desc">전체 게임 페이지 열기</div>
+            <div class="card-title">오목&빙고 게임</div>
+            <div class="card-desc">오목과 빙고 게임 열기</div>
           </div>
-          <div class="card-cta"><a href="https://k-trip.streamlit.app/" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+          <div class="card-cta"><a href="https://k-trip.streamlit.app/Gomoku_&_Bingo_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
         </article>
 
         <article class="card">
@@ -143,37 +153,35 @@
     (function(){
       const startDate = new Date(Date.UTC(2024,7,24)); // month 7 = Aug (0-indexed)
       const now = new Date();
-      const diffDays = Math.floor((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - startDate.getTime()) / (24*3600*1000));
+      // find the most recent Saturday (including today if Saturday)
+      const weekday = now.getDay(); // 0=Sun..6=Sat
+      const daysSinceSat = (weekday + 1) % 7; // 0 if Saturday
+      const lastSat = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceSat);
+      lastSat.setHours(0,0,0,0);
+
+      const diffDays = Math.floor((Date.UTC(lastSat.getFullYear(), lastSat.getMonth(), lastSat.getDate()) - startDate.getTime()) / (24*3600*1000));
       const weeks = Math.floor(diffDays / 7);
       const startRound = 1135;
-      const currentRound = startRound + weeks;
+      const baseRound = startRound + weeks; // round at last Saturday
 
-      // 다음 토요일 날짜 (JS: 6=Saturday)
-      const weekday = now.getDay();
-      const daysUntilSat = (6 - weekday + 7) % 7;
-      const saturday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSat);
+      // Decide display round: if today is Monday..Friday then show next round (baseRound+1),
+      // if today is Saturday or Sunday show baseRound.
+      const todayWeek = now.getDay();
+      const displayRound = (todayWeek >= 1 && todayWeek <= 5) ? baseRound + 1 : baseRound;
 
-      const y = saturday.getFullYear();
-      const m = String(saturday.getMonth()+1).padStart(2,'0');
-      const d = String(saturday.getDate()).padStart(2,'0');
+      // draw date: if displaying baseRound -> lastSat, else next Saturday
+      const drawDate = new Date(lastSat.getTime());
+      if(displayRound > baseRound) drawDate.setDate(drawDate.getDate() + 7);
+
+      const y = drawDate.getFullYear();
+      const m = String(drawDate.getMonth()+1).padStart(2,'0');
+      const d = String(drawDate.getDate()).padStart(2,'0');
       const dateStr = `${y}.${m}.${d}`;
 
-      const roundText = `${currentRound}회차 (${dateStr})`;
-      const roundLabelEl = document.getElementById('roundLabel');
-      if(roundLabelEl) roundLabelEl.textContent = roundText;
-      const roundInfoEl = document.getElementById('roundInfo');
-      if(roundInfoEl) roundInfoEl.textContent = roundText;
+      const roundText = `${displayRound}회차 (${dateStr})`;
+      const displayEl = document.getElementById('displayRound');
+      if(displayEl) displayEl.textContent = roundText;
     })();
-
-    // number generation
-    function randSet(){
-      const nums = Array.from({length:45},(_,i)=>i+1);
-      for(let i=nums.length-1;i>0;i--){
-        const j = Math.floor(Math.random()*(i+1));
-        [nums[i],nums[j]]=[nums[j],nums[i]];
-      }
-      return nums.slice(0,6).sort((a,b)=>a-b);
-    }
 
     function colorClass(n){
       if(n>=1 && n<=10) return 'dark-yellow';
@@ -182,37 +190,268 @@
       if(n<=40) return 'gray';
       return 'green';
     }
-
-    function renderSets(sets){
-      const root = document.getElementById('result');
-      root.innerHTML='';
-      sets.forEach((set,idx)=>{
-        const container = document.createElement('div');
-        container.className='set';
-        const label = document.createElement('div');
-        label.textContent = (idx+1) + '세트:';
-        label.style.fontWeight='700';
-        container.appendChild(label);
-        const numbersWrap = document.createElement('div');
-        numbersWrap.style.display = 'flex';
-        numbersWrap.style.gap = '8px';
-        numbersWrap.style.marginTop = '6px';
-        set.forEach(n=>{
-          const c = document.createElement('div');
-          c.className = 'circle ' + colorClass(n);
-          c.textContent = n;
-          numbersWrap.appendChild(c);
-        });
-        container.appendChild(numbersWrap);
-        root.appendChild(container);
-      });
+    
+    function formatProb(p){
+      if(!isFinite(p) || p<=0) return '0.0000%';
+      return (p*100).toFixed(4) + '%';
     }
+    
 
-    document.getElementById('genBtn').addEventListener('click', function(){
-      const all = [];
-      for(let i=0;i<5;i++) all.push(randSet());
-      renderSets(all);
+  // function to load model probabilities and sample 5 sets
+  function generateModelSets(){
+    fetch('models/last_prediction.json')
+      .then(r=>r.json())
+      .then(data=>{
+        const probs = data.probs || [];
+        function sampleOneSet(){
+          const p = probs.slice();
+          const chosen = [];
+          for(let k=0;k<6;k++){
+            const sum = p.reduce((a,b)=>a+b,0);
+            if(sum<=0) break;
+            const r = Math.random()*sum;
+            let acc = 0;
+            let idx = -1;
+            for(let i=0;i<p.length;i++){
+              acc += p[i];
+              if(acc>=r){ idx=i; break; }
+            }
+            if(idx===-1){ idx = p.findIndex(v=>v>0); }
+            if(idx===-1) break;
+            chosen.push(idx+1);
+            p[idx]=0;
+          }
+          return chosen.sort((a,b)=>a-b);
+        }
+
+        const sets = [];
+        for(let s=0;s<5;s++) sets.push(sampleOneSet());
+
+        const root = document.getElementById('modelSets');
+        if(!root) return;
+        root.innerHTML='';
+        sets.forEach((set,idx)=>{
+          const card = document.createElement('div');
+          card.style.display='flex';
+          card.style.flexDirection='column';
+          card.style.alignItems='center';
+          card.style.gap='8px';
+          card.style.padding='8px';
+          card.style.background='#fff';
+          card.style.borderRadius='10px';
+          card.style.boxShadow='0 6px 18px rgba(15,23,36,0.06)';
+
+          const label = document.createElement('div');
+          label.textContent = (idx+1) + '세트';
+          label.style.fontWeight = '700';
+
+          // compute simple joint probability (approximate) as product of per-number probs
+          const prob = set.reduce((acc,n)=>acc * (probs[n-1] || 0), 1);
+          const probDiv = document.createElement('div');
+          probDiv.style.fontSize = '0.85rem';
+          probDiv.style.color = '#64748b';
+          probDiv.textContent = '당첨확률: ' + formatProb(prob);
+
+          const numsWrap = document.createElement('div');
+          numsWrap.style.display='flex';
+          numsWrap.style.gap='8px';
+          set.forEach(n=>{
+            const c = document.createElement('div');
+            c.className = 'circle ' + colorClass(n);
+            c.textContent = n;
+            numsWrap.appendChild(c);
+          });
+
+          card.appendChild(label);
+          card.appendChild(probDiv);
+          card.appendChild(numsWrap);
+          root.appendChild(card);
+        });
+      })
+      .catch(err=>{ console.warn('prediction load failed', err); });
+  }
+
+  // Weekly generation control (one generation per week, week starts on Monday)
+  // cooldown in minutes control
+  function getCooldownMinutes(){
+    const stored = localStorage.getItem('modelCooldownMinutes');
+    if(stored) return parseInt(stored,10);
+    return 10080; // default 7 days
+  }
+
+  function setCooldownMinutes(v){
+    localStorage.setItem('modelCooldownMinutes', String(v));
+  }
+
+  function canGenerateNow(){
+    const stored = localStorage.getItem('lastModelGen');
+    // if running locally (dev), use minute-based cooldown; otherwise use weekly Monday rule
+    const hostname = window.location.hostname;
+    const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
+    if(isLocal){
+      if(!stored) return true;
+      const last = new Date(stored);
+      const cooldown = getCooldownMinutes();
+      const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
+      return new Date() >= nextAllowed;
+    } else {
+      if(!stored) return true;
+      const last = new Date(stored);
+      function getMonday(dt){
+        const d = new Date(dt);
+        const day = d.getDay();
+        const diff = (day + 6) % 7; // days since Monday
+        d.setDate(d.getDate() - diff);
+        d.setHours(0,0,0,0);
+        return d;
+      }
+      const lastMon = getMonday(last);
+      const nowMon = getMonday(new Date());
+      return lastMon < nowMon;
+    }
+  }
+
+  function markGeneratedNow(){
+    localStorage.setItem('lastModelGen', new Date().toISOString());
+  }
+
+  const resampleBtn = document.getElementById('resampleModelBtn');
+  const cooldownInput = document.getElementById('cooldownMinutes');
+
+  function updateButtonState(){
+    if(!resampleBtn) return;
+    const stored = localStorage.getItem('lastModelGen');
+    const hostname = window.location.hostname;
+    const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
+    if(!stored){
+      resampleBtn.disabled = false;
+      resampleBtn.textContent = isLocal ? '모델로 5세트 생성' : '모델로 5세트 생성 (월요일만)';
+      resampleBtn.classList.remove('btn','secondary');
+      resampleBtn.classList.add('btn');
+      return;
+    }
+    const last = new Date(stored);
+    if(isLocal){
+      const cooldown = getCooldownMinutes();
+      const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
+      if(new Date() >= nextAllowed){
+        resampleBtn.disabled = false;
+        resampleBtn.textContent = '모델로 5세트 생성';
+        resampleBtn.classList.remove('btn','secondary');
+        resampleBtn.classList.add('btn');
+      } else {
+        resampleBtn.disabled = true;
+        resampleBtn.textContent = '다음 생성: ' + nextAllowed.toLocaleString();
+        resampleBtn.classList.remove('btn');
+        resampleBtn.classList.add('btn','secondary');
+      }
+    } else {
+      function getMonday(dt){
+        const d = new Date(dt);
+        const day = d.getDay();
+        const diff = (day + 6) % 7;
+        d.setDate(d.getDate() - diff);
+        d.setHours(0,0,0,0);
+        return d;
+      }
+      const lastMon = getMonday(last);
+      const nowMon = getMonday(new Date());
+      if(lastMon < nowMon){
+        resampleBtn.disabled = false;
+        resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
+        resampleBtn.classList.remove('btn','secondary');
+        resampleBtn.classList.add('btn');
+      } else {
+        const nextMon = new Date(nowMon.getTime());
+        nextMon.setDate(nextMon.getDate() + 7);
+        resampleBtn.disabled = true;
+        resampleBtn.textContent = '다음 생성: ' + nextMon.toLocaleString();
+        resampleBtn.classList.remove('btn');
+        resampleBtn.classList.add('btn','secondary');
+      }
+    }
+  }
+
+  if(cooldownInput){
+    // initialize input from storage
+    const v = getCooldownMinutes();
+    cooldownInput.value = v;
+    cooldownInput.addEventListener('change', function(){
+      const val = parseInt(this.value,10) || 0;
+      setCooldownMinutes(val);
+      updateButtonState();
     });
+  }
+
+  if(resampleBtn){
+    resampleBtn.addEventListener('click', function(){
+      if(!canGenerateNow()){
+        alert('아직 쿨다운이 남아 있습니다. 다음 생성 가능 시간을 확인하세요.');
+        updateButtonState();
+        return;
+      }
+      generateModelSets();
+      markGeneratedNow();
+      updateButtonState();
+      updateNextAllowedDisplay();
+    });
+  }
+
+
+  // set initial button state
+  updateButtonState();
+  // show next-allowed info and start countdown if needed
+  let __countdownInterval = null;
+  function pad2(v){ return String(v).padStart(2,'0'); }
+  function formatDateTime(dt){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const d = String(dt.getDate()).padStart(2,'0');
+    const hh = pad2(dt.getHours());
+    const mm = pad2(dt.getMinutes());
+    const ss = pad2(dt.getSeconds());
+    return `${y}.${m}.${d} ${hh}:${mm}:${ss}`;
+  }
+  function formatRemaining(ms){
+    if(ms <= 0) return '00:00:00';
+    const sec = Math.floor(ms/1000);
+    const days = Math.floor(sec / 86400);
+    const hours = Math.floor((sec % 86400) / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    const seconds = sec % 60;
+    if(days>0) return `${days}일 ${pad2(hours)}시 ${pad2(minutes)}분 ${pad2(seconds)}초`;
+    return `${pad2(hours)}:${pad2(minutes)}:${pad2(seconds)}`;
+  }
+  function clearCountdown(){ if(__countdownInterval){ clearInterval(__countdownInterval); __countdownInterval = null; } }
+  function updateNextAllowedDisplay(){
+    const el = document.getElementById('nextAllowedInfo');
+    if(!el) return;
+    const stored = localStorage.getItem('lastModelGen');
+    if(!stored){ el.textContent = ''; clearCountdown(); return; }
+    const last = new Date(stored);
+    const cooldown = getCooldownMinutes();
+    const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
+    clearCountdown();
+    function tick(){
+      const now = new Date();
+      const remaining = nextAllowed.getTime() - now.getTime();
+      if(remaining <= 0){
+        el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
+        clearCountdown();
+        updateButtonState();
+        return;
+      }
+      el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; | &nbsp; 남은 시간: ${formatRemaining(remaining)}`;
+    }
+    tick();
+    __countdownInterval = setInterval(tick, 1000);
+  }
+
+  if(cooldownInput){ cooldownInput.addEventListener('change', updateNextAllowedDisplay); }
+  // initialize countdown display
+  updateNextAllowedDisplay();
+  // render initial sets from latest prediction JSON
+  generateModelSets();
   </script>
 </body>
 </html>
