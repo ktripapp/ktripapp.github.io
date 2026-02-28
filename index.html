@@ -31,12 +31,20 @@
     .btn.secondary{background:#fff;color:var(--accent);border:1px solid rgba(11,87,208,0.12);box-shadow:none}
     .btn:hover{transform:translateY(-3px)}
     .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:18px;align-items:stretch}
-    .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(20,28,46,0.06);display:flex;flex-direction:column;gap:12px;align-items:stretch}
+    .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(20,28,46,0.06);display:flex;flex-direction:column;gap:12px;align-items:stretch;transition:transform .12s,box-shadow .12s}
     .top-row{display:flex;gap:12px;align-items:center}
     .icon{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,rgba(11,87,208,0.08),#eaf4ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:1.05rem;flex:0 0 64px}
-    .card-body{flex:1 1 auto;display:flex;flex-direction:column;gap:6px;justify-content:center}
+    .card-body{flex:1 1 auto;display:flex;flex-direction:column;gap:6px;justify-content:center;align-items:center;text-align:center}
     .card-title{font-weight:800;font-size:1rem;color:#0f1724}
     .card-desc{color:#64748b;font-size:0.95rem}
+    .card-link{display:block;color:inherit;text-decoration:none;cursor:pointer}
+    /* soft background variants for game cards */
+    .card.variant-pink{background:linear-gradient(135deg,#fff6fb,#fff0f6)}
+    .card.variant-blue{background:linear-gradient(135deg,#f2fbff,#eaf6ff)}
+    .card.variant-green{background:linear-gradient(135deg,#f6fff4,#ecfff1)}
+    .card.variant-lavender{background:linear-gradient(135deg,#f5f2ff,#efeaff)}
+    .card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(20,28,46,0.12)}
+    .card-link:hover .card-title, .card:hover .card-title{color:var(--accent)}
     .card-cta{display:block;margin-top:6px}
     .btn.small{padding:10px 12px;border-radius:10px;width:100%;text-align:center}
     .board{margin-top:18px}
@@ -61,25 +69,23 @@
         <div class="logo">L</div>
         <div>
           <h1>LottoAI</h1>
-          <div style="color:#64748b;font-size:0.92rem">간편 로또 번호 생성기 · 외부 게임 모음</div>
         </div>
       </div>
       <nav>
         <a href="index.html">홈</a>
-        <a href="#games">게임</a>
-        <a href="#about">정보</a>
+        <a href="https://k-trip.streamlit.app/" target="_blank" rel="noopener noreferrer">게임</a>
       </nav>
     </header>
 
     <section class="hero">
       <div class="hero-text">
-        <h2>5세트의 로또 번호를 즉시 생성하세요</h2>
-        <p>깔끔한 반응형 디자인으로 모바일에서도 편하게 사용하실 수 있습니다. 1213회 당첨번호 학습모델하여 생성한 로또 번호를 로그인 없이 확인해보세요.</p>
+        <h2>5세트 로또 번호 즉시 생성</h2>
+        <p>깔끔한 반응형 디자인으로 모바일에서도 편하게 사용하실 수 있습니다. 1213회까지 당첨번호 학습모델하여 생성한 로또 번호를 로그인 없이 확인해보세요.</p>
       </div>
       <div class="hero-actions">
-        <button id="resampleModelBtn" class="btn">모델로 5세트 생성</button>
+        <button id="resampleModelBtn" class="btn" onclick="onGenerateClick()">모델 5세트 생성</button>
         <label style="display:flex;align-items:center;gap:8px;color:#475569;font-size:0.95rem">
-          <span>관리자모드</span>
+          <span>관리자</span>
           <input id="cooldownMinutes" type="number" min="1" step="1" value="1" style="width:90px;padding:6px;border-radius:8px;border:1px solid #e6eefc" />
         </label>
       </div>
@@ -101,36 +107,40 @@
 
     <div id="after-lotto">
       <section id="games" class="cards" aria-label="외부 게임 목록">
-        <article class="card">
-          <div class="card-body">
-            <div class="card-title">오목&빙고 게임</div>
-            <div class="card-desc">오목과 빙고 게임 열기</div>
-          </div>
-          <div class="card-cta"><a href="https://k-trip.streamlit.app/Gomoku_&_Bingo_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        <article class="card variant-pink">
+          <a href="https://k-trip.streamlit.app/Gomoku_&_Bingo_Game" target="_blank" rel="noopener noreferrer" class="card-link">
+            <div class="card-body">
+              <div class="card-title">오목&빙고 게임</div>
+              <div class="card-desc">오목과 빙고 게임 열기</div>
+            </div>
+          </a>
         </article>
 
-        <article class="card">
-          <div class="card-body">
-            <div class="card-title">Number_Game</div>
-            <div class="card-desc">숫자 맞추기 게임</div>
-          </div>
-          <div class="card-cta"><a href="https://k-trip.streamlit.app/Number_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        <article class="card variant-blue">
+          <a href="https://k-trip.streamlit.app/Number_Game" target="_blank" rel="noopener noreferrer" class="card-link">
+            <div class="card-body">
+              <div class="card-title">Number_Game</div>
+              <div class="card-desc">숫자 맞추기 게임</div>
+            </div>
+          </a>
         </article>
 
-        <article class="card">
-          <div class="card-body">
-            <div class="card-title">Simple_Quiz_Game</div>
-            <div class="card-desc">간단한 퀴즈 게임</div>
-          </div>
-          <div class="card-cta"><a href="https://k-trip.streamlit.app/Simple_Quiz_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        <article class="card variant-green">
+          <a href="https://k-trip.streamlit.app/Simple_Quiz_Game" target="_blank" rel="noopener noreferrer" class="card-link">
+            <div class="card-body">
+              <div class="card-title">Simple_Quiz_Game</div>
+              <div class="card-desc">간단한 퀴즈 게임</div>
+            </div>
+          </a>
         </article>
 
-        <article class="card">
-          <div class="card-body">
-            <div class="card-title">Google_Map</div>
-            <div class="card-desc">지도와 위치 탐색</div>
-          </div>
-          <div class="card-cta"><a href="https://k-trip.streamlit.app/Google_Map" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        <article class="card variant-lavender">
+          <a href="https://k-trip.streamlit.app/Google_Map" target="_blank" rel="noopener noreferrer" class="card-link">
+            <div class="card-body">
+              <div class="card-title">Google_Map</div>
+              <div class="card-desc">지도와 위치 탐색</div>
+            </div>
+          </a>
         </article>
       </section>
 
@@ -149,20 +159,24 @@
   </div>
 
   <script>
-    // 날짜 및 회차 계산 (기준일: 2024-08-24)
+    // 날짜 및 회차 자동 계산 (레퍼런스: 1214 -> 2026-03-07)
     (function(){
-      const startDate = new Date(Date.UTC(2024,7,24)); // month 7 = Aug (0-indexed)
-      const now = new Date();
+      // Reference mapping: roundRef at dateRef
+      const roundRef = 1214;
+      const dateRef = new Date(Date.UTC(2026,2,7)); // 2026-03-07 (Sat)
+
       // find the most recent Saturday (including today if Saturday)
+      const now = new Date();
       const weekday = now.getDay(); // 0=Sun..6=Sat
       const daysSinceSat = (weekday + 1) % 7; // 0 if Saturday
       const lastSat = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceSat);
       lastSat.setHours(0,0,0,0);
 
-      const diffDays = Math.floor((Date.UTC(lastSat.getFullYear(), lastSat.getMonth(), lastSat.getDate()) - startDate.getTime()) / (24*3600*1000));
-      const weeks = Math.floor(diffDays / 7);
-      const startRound = 1135;
-      const baseRound = startRound + weeks; // round at last Saturday
+      // compute number of weeks difference from dateRef to lastSat
+      const diffMs = Date.UTC(lastSat.getFullYear(), lastSat.getMonth(), lastSat.getDate()) - Date.UTC(dateRef.getFullYear(), dateRef.getMonth(), dateRef.getDate());
+      const weeks = Math.floor(diffMs / (7*24*3600*1000));
+
+      const baseRound = roundRef + weeks;
 
       // Decide display round: if today is Monday..Friday then show next round (baseRound+1),
       // if today is Saturday or Sunday show baseRound.
@@ -300,6 +314,10 @@
         root.appendChild(msg);
         root.appendChild(hint);
         root.appendChild(fallbackBtn);
+        // Also render a fallback uniform set immediately so the button click still produces numbers
+        try{
+          renderSetsFromProbs(new Array(45).fill(1/45));
+        }catch(e){ console.warn('fallback render failed', e); }
       });
   }
 
@@ -367,7 +385,7 @@
     });
   }
 
-  // Weekly generation control (one generation per week, week starts on Monday)
+  // Weekly generation control (one generation per week, week starts on Sunday)
   // cooldown in minutes control
   function getCooldownMinutes(){
     // Prefer current input value (immediate feedback) then fall back to stored value
@@ -406,17 +424,16 @@
     // github (or other deployed): allow once per calendar week (Monday)
     if(!stored) return true;
     const last = new Date(stored);
-    function getMonday(dt){
+    function getWeekStart(dt){
       const d = new Date(dt);
-      const day = d.getDay();
-      const diff = (day + 6) % 7; // days since Monday
-      d.setDate(d.getDate() - diff);
+      const day = d.getDay(); // 0=Sun..6=Sat
+      d.setDate(d.getDate() - day); // go back to Sunday
       d.setHours(0,0,0,0);
       return d;
     }
-    const lastMon = getMonday(last);
-    const nowMon = getMonday(new Date());
-    return lastMon < nowMon;
+    const lastWeek = getWeekStart(last);
+    const nowWeek = getWeekStart(new Date());
+    return lastWeek < nowWeek;
   }
 
   function markGeneratedNow(){
@@ -433,12 +450,12 @@
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
     const cooldownVal = getCooldownMinutes();
     const effCooldown = (isLocal && cooldownVal === -1) ? 1 : cooldownVal;
-    if(!stored){
+      if(!stored){
       resampleBtn.disabled = false;
       if(!isLocal && cooldownVal === -1){
         resampleBtn.textContent = '모델로 5세트 생성 (무제한)';
       } else if(!isLocal){
-        resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
+        resampleBtn.textContent = '모델로 5세트 생성 (일요일만)';
       } else {
         resampleBtn.textContent = '모델로 5세트 생성';
       }
@@ -471,26 +488,25 @@
       resampleBtn.classList.add('btn');
       return;
     }
-    function getMonday(dt){
+    function getWeekStart(dt){
       const d = new Date(dt);
       const day = d.getDay();
-      const diff = (day + 6) % 7;
-      d.setDate(d.getDate() - diff);
+      d.setDate(d.getDate() - day);
       d.setHours(0,0,0,0);
       return d;
     }
-    const lastMon = getMonday(last);
-    const nowMon = getMonday(new Date());
-    if(lastMon < nowMon){
+    const lastWeek = getWeekStart(last);
+    const nowWeek = getWeekStart(new Date());
+    if(lastWeek < nowWeek){
       resampleBtn.disabled = false;
-      resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
+      resampleBtn.textContent = '모델로 5세트 생성 (일요일만)';
       resampleBtn.classList.remove('btn','secondary');
       resampleBtn.classList.add('btn');
     } else {
-      const nextMon = new Date(nowMon.getTime());
-      nextMon.setDate(nextMon.getDate() + 7);
+      const nextWeek = new Date(nowWeek.getTime());
+      nextWeek.setDate(nextWeek.getDate() + 7);
       resampleBtn.disabled = true;
-      resampleBtn.textContent = '다음 생성: ' + nextMon.toLocaleString();
+      resampleBtn.textContent = '다음 생성: ' + nextWeek.toLocaleString();
       resampleBtn.classList.remove('btn');
       resampleBtn.classList.add('btn','secondary');
     }
@@ -515,6 +531,8 @@
         return;
       }
       generateModelSets();
+      // When generating, show the upcoming Saturday's draw round (user expectation)
+      setDisplayToNextSaturdayRound();
       markGeneratedNow();
       updateButtonState();
       updateNextAllowedDisplay();
@@ -536,6 +554,74 @@
     const ss = pad2(dt.getSeconds());
     return `${y}.${m}.${d} ${hh}:${mm}:${ss}`;
   }
+  // helper to set display round based on a draw Date object
+  function setDisplayRoundForDate(drawDate){
+    // use the same reference as the round auto-calculation: roundRef=1214 at 2026-03-07
+    const roundRef = 1214;
+    const dateRef = new Date(Date.UTC(2026,2,7));
+    const diffMs = Date.UTC(drawDate.getFullYear(), drawDate.getMonth(), drawDate.getDate()) - Date.UTC(dateRef.getFullYear(), dateRef.getMonth(), dateRef.getDate());
+    const weeks = Math.floor(diffMs / (7*24*3600*1000));
+    const displayRound = roundRef + weeks;
+    const y = drawDate.getFullYear();
+    const m = String(drawDate.getMonth()+1).padStart(2,'0');
+    const d = String(drawDate.getDate()).padStart(2,'0');
+    const dateStr = `${y}.${m}.${d}`;
+    const roundText = `${displayRound}회차 (${dateStr})`;
+    const displayEl = document.getElementById('displayRound');
+    if(displayEl) displayEl.textContent = roundText;
+  }
+
+  // compute upcoming Saturday (including same-week Saturday) and set display to that round
+  function setDisplayToNextSaturdayRound(){
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun..6=Sat
+    const daysUntilSat = (6 - day + 7) % 7; // 0 if today is Saturday
+    const nextSat = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysUntilSat);
+    nextSat.setHours(0,0,0,0);
+    setDisplayRoundForDate(nextSat);
+  }
+
+  // Safe click handler bound from HTML to ensure generate logic runs
+  function onGenerateClick(){
+    try{
+      console.log('onGenerateClick invoked');
+      if(!canGenerateNow()){
+        alert('아직 쿨다운이 남아 있습니다. 다음 생성 가능 시간을 확인하세요.');
+        updateButtonState();
+        return;
+      }
+      generateModelSets();
+      setDisplayToNextSaturdayRound();
+      markGeneratedNow();
+      updateButtonState();
+      updateNextAllowedDisplay();
+    }catch(e){
+      console.error('onGenerateClick error', e);
+      alert('생성 중 오류가 발생했습니다. 콘솔을 확인하세요.');
+    }
+  }
+  function formatDate(dt){
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const d = String(dt.getDate()).padStart(2,'0');
+    return `${y}.${m}.${d}`;
+  }
+  function formatTime(dt){
+    const hh = pad2(dt.getHours());
+    const mm = pad2(dt.getMinutes());
+    const ss = pad2(dt.getSeconds());
+    return `${hh}:${mm}:${ss}`;
+  }
+  
+  // styles for split next-allowed display
+  (function injectNextAllowedStyles(){
+    const css = `
+      .next-allowed-date{font-weight:700;color:#0b57d0}
+      .next-allowed-time{color:#475569;margin-top:4px}
+      .next-allowed-remaining{color:#64748b;margin-top:6px;font-size:0.95rem}
+    `;
+    const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+  })();
   function formatRemaining(ms){
     if(ms <= 0) return '00:00:00';
     const sec = Math.floor(ms/1000);
@@ -575,48 +661,42 @@
         const now = new Date();
         const remaining = nextAllowed.getTime() - now.getTime();
         if(remaining <= 0){
-          el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
+            el.innerHTML = `다음 생성:<div class="next-allowed-date">${formatDate(nextAllowed)}</div><div class="next-allowed-time">${formatTime(nextAllowed)}</div> &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
           clearCountdown();
           updateButtonState();
           return;
         }
-        el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; | &nbsp; 남은 시간: ${formatRemaining(remaining)}`;
+          el.innerHTML = `다음 생성:<div class="next-allowed-date">${formatDate(nextAllowed)}</div><div class="next-allowed-time">${formatTime(nextAllowed)}</div><div class="next-allowed-remaining">남은 시간: ${formatRemaining(remaining)}</div>`;
       }
       tickLocal();
       __countdownInterval = setInterval(tickLocal, 1000);
       return;
     }
-    // deployed: weekly Monday rule -> compute next Monday allowed based on last generation
-    function getMonday(dt){
+    // deployed: weekly Sunday rule -> compute next Sunday allowed based on last generation
+    function getWeekStart(dt){
       const d = new Date(dt);
-      const day = d.getDay();
-      const diff = (day + 6) % 7;
-      d.setDate(d.getDate() - diff);
+      const day = d.getDay(); // 0=Sun..6=Sat
+      d.setDate(d.getDate() - day); // go back to Sunday
       d.setHours(0,0,0,0);
       return d;
     }
-    const lastMon = getMonday(last);
-    const nowMon = getMonday(new Date());
+    const lastWeek = getWeekStart(last);
+    const nowWeek = getWeekStart(new Date());
     let nextAllowed;
-    if(lastMon < nowMon){
-      // generation from previous week -> allowed now; next allowed is next Monday
-      nextAllowed = new Date(nowMon.getTime());
-      nextAllowed.setDate(nextAllowed.getDate() + 7);
-    } else {
-      // already generated this week -> next allowed is next Monday after nowMon
-      nextAllowed = new Date(nowMon.getTime());
-      nextAllowed.setDate(nextAllowed.getDate() + 7);
-    }
+    // Next allowed is the Sunday after the current week
+    nextAllowed = new Date(nowWeek.getTime());
+    nextAllowed.setDate(nextAllowed.getDate() + 7);
+
     function tickDeployed(){
       const now = new Date();
       const remaining = nextAllowed.getTime() - now.getTime();
       if(remaining <= 0){
-        el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
+        el.innerHTML = `다음 생성:<div class="next-allowed-date">${formatDate(nextAllowed)}</div><div class="next-allowed-time">${formatTime(nextAllowed)}</div> &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
         clearCountdown();
         updateButtonState();
         return;
       }
-      el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; | &nbsp; 남은 시간: ${formatRemaining(remaining)}`;
+      el.innerHTML = `다음 생성:<div class="next-allowed-date">${formatDate(nextAllowed)}</div><div class="next-allowed-time">${formatTime(nextAllowed)}</div><div class="next-allowed-remaining">남은 시간: ${formatRemaining(remaining)}</div>`;
     }
     tickDeployed();
     __countdownInterval = setInterval(tickDeployed, 1000);
