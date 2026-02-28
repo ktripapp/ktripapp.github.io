@@ -290,6 +290,9 @@
     const hostname = window.location.hostname;
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
     const isGithub = hostname && hostname.indexOf('github.io') !== -1;
+    // if cooldown is set to -1 => unlimited generation allowed
+    const cooldownVal = getCooldownMinutes();
+    if(cooldownVal === -1) return true;
     // local: minute-based cooldown
     if(isLocal){
       if(!stored) return true;
@@ -326,21 +329,28 @@
     const stored = localStorage.getItem('lastModelGen');
     const hostname = window.location.hostname;
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
-    const isGithub = hostname && hostname.indexOf('github.io') !== -1;
+    const cooldownVal = getCooldownMinutes();
+    const effCooldown = (isLocal && cooldownVal === -1) ? 1 : cooldownVal;
     if(!stored){
       resampleBtn.disabled = false;
-      resampleBtn.textContent = isLocal ? '모델로 5세트 생성' : '모델로 5세트 생성 (월요일만)';
+      if(!isLocal && cooldownVal === -1){
+        resampleBtn.textContent = '모델로 5세트 생성 (무제한)';
+      } else if(!isLocal){
+        resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
+      } else {
+        resampleBtn.textContent = '모델로 5세트 생성';
+      }
       resampleBtn.classList.remove('btn','secondary');
       resampleBtn.classList.add('btn');
       return;
     }
     const last = new Date(stored);
     if(isLocal){
-      const cooldown = getCooldownMinutes();
-      const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
+      // local: use effective cooldown (treat -1 as 1)
+      const nextAllowed = new Date(last.getTime() + effCooldown*60*1000);
       if(new Date() >= nextAllowed){
         resampleBtn.disabled = false;
-        resampleBtn.textContent = '모델로 5세트 생성';
+        resampleBtn.textContent = effCooldown === 1 && cooldownVal === -1 ? '모델로 5세트 생성' : '모델로 5세트 생성';
         resampleBtn.classList.remove('btn','secondary');
         resampleBtn.classList.add('btn');
       } else {
@@ -351,7 +361,14 @@
       }
       return;
     }
-    // deployed (GitHub or other): weekly Monday rule
+    // deployed: if cooldown -1 => unlimited, else weekly Monday rule
+    if(cooldownVal === -1){
+      resampleBtn.disabled = false;
+      resampleBtn.textContent = '모델로 5세트 생성 (무제한)';
+      resampleBtn.classList.remove('btn','secondary');
+      resampleBtn.classList.add('btn');
+      return;
+    }
     function getMonday(dt){
       const d = new Date(dt);
       const day = d.getDay();
@@ -443,8 +460,14 @@
     }
     const last = new Date(stored);
     clearCountdown();
+    const cooldownVal = getCooldownMinutes();
+    // If deployed and cooldown==-1 => unlimited
+    if(cooldownVal === -1 && !isLocal){
+      el.innerHTML = `<strong style="color:#07801a">무제한 생성 가능</strong>`;
+      return;
+    }
     if(isLocal){
-      const cooldown = getCooldownMinutes();
+      const cooldown = cooldownVal;
       const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
       function tickLocal(){
         const now = new Date();
