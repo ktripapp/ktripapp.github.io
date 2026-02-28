@@ -275,8 +275,10 @@
   // cooldown in minutes control
   function getCooldownMinutes(){
     const stored = localStorage.getItem('modelCooldownMinutes');
+    const hostname = window.location.hostname;
+    const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
     if(stored) return parseInt(stored,10);
-    return 10080; // default 7 days
+    return isLocal ? 1 : 10080; // default 1 minute locally, 7 days (in minutes) otherwise
   }
 
   function setCooldownMinutes(v){
@@ -285,30 +287,31 @@
 
   function canGenerateNow(){
     const stored = localStorage.getItem('lastModelGen');
-    // if running locally (dev), use minute-based cooldown; otherwise use weekly Monday rule
     const hostname = window.location.hostname;
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
+    const isGithub = hostname && hostname.indexOf('github.io') !== -1;
+    // local: minute-based cooldown
     if(isLocal){
       if(!stored) return true;
       const last = new Date(stored);
       const cooldown = getCooldownMinutes();
       const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
       return new Date() >= nextAllowed;
-    } else {
-      if(!stored) return true;
-      const last = new Date(stored);
-      function getMonday(dt){
-        const d = new Date(dt);
-        const day = d.getDay();
-        const diff = (day + 6) % 7; // days since Monday
-        d.setDate(d.getDate() - diff);
-        d.setHours(0,0,0,0);
-        return d;
-      }
-      const lastMon = getMonday(last);
-      const nowMon = getMonday(new Date());
-      return lastMon < nowMon;
     }
+    // github (or other deployed): allow once per calendar week (Monday)
+    if(!stored) return true;
+    const last = new Date(stored);
+    function getMonday(dt){
+      const d = new Date(dt);
+      const day = d.getDay();
+      const diff = (day + 6) % 7; // days since Monday
+      d.setDate(d.getDate() - diff);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    const lastMon = getMonday(last);
+    const nowMon = getMonday(new Date());
+    return lastMon < nowMon;
   }
 
   function markGeneratedNow(){
@@ -323,6 +326,7 @@
     const stored = localStorage.getItem('lastModelGen');
     const hostname = window.location.hostname;
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
+    const isGithub = hostname && hostname.indexOf('github.io') !== -1;
     if(!stored){
       resampleBtn.disabled = false;
       resampleBtn.textContent = isLocal ? '모델로 5세트 생성' : '모델로 5세트 생성 (월요일만)';
@@ -345,30 +349,31 @@
         resampleBtn.classList.remove('btn');
         resampleBtn.classList.add('btn','secondary');
       }
+      return;
+    }
+    // deployed (GitHub or other): weekly Monday rule
+    function getMonday(dt){
+      const d = new Date(dt);
+      const day = d.getDay();
+      const diff = (day + 6) % 7;
+      d.setDate(d.getDate() - diff);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    const lastMon = getMonday(last);
+    const nowMon = getMonday(new Date());
+    if(lastMon < nowMon){
+      resampleBtn.disabled = false;
+      resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
+      resampleBtn.classList.remove('btn','secondary');
+      resampleBtn.classList.add('btn');
     } else {
-      function getMonday(dt){
-        const d = new Date(dt);
-        const day = d.getDay();
-        const diff = (day + 6) % 7;
-        d.setDate(d.getDate() - diff);
-        d.setHours(0,0,0,0);
-        return d;
-      }
-      const lastMon = getMonday(last);
-      const nowMon = getMonday(new Date());
-      if(lastMon < nowMon){
-        resampleBtn.disabled = false;
-        resampleBtn.textContent = '모델로 5세트 생성 (월요일만)';
-        resampleBtn.classList.remove('btn','secondary');
-        resampleBtn.classList.add('btn');
-      } else {
-        const nextMon = new Date(nowMon.getTime());
-        nextMon.setDate(nextMon.getDate() + 7);
-        resampleBtn.disabled = true;
-        resampleBtn.textContent = '다음 생성: ' + nextMon.toLocaleString();
-        resampleBtn.classList.remove('btn');
-        resampleBtn.classList.add('btn','secondary');
-      }
+      const nextMon = new Date(nowMon.getTime());
+      nextMon.setDate(nextMon.getDate() + 7);
+      resampleBtn.disabled = true;
+      resampleBtn.textContent = '다음 생성: ' + nextMon.toLocaleString();
+      resampleBtn.classList.remove('btn');
+      resampleBtn.classList.add('btn','secondary');
     }
   }
 
@@ -427,12 +432,57 @@
     const el = document.getElementById('nextAllowedInfo');
     if(!el) return;
     const stored = localStorage.getItem('lastModelGen');
-    if(!stored){ el.textContent = ''; clearCountdown(); return; }
+    const hostname = window.location.hostname;
+    const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
+    const isGithub = hostname && hostname.indexOf('github.io') !== -1;
+    if(!stored){
+      // no generation yet
+      el.textContent = '';
+      clearCountdown();
+      return;
+    }
     const last = new Date(stored);
-    const cooldown = getCooldownMinutes();
-    const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
     clearCountdown();
-    function tick(){
+    if(isLocal){
+      const cooldown = getCooldownMinutes();
+      const nextAllowed = new Date(last.getTime() + cooldown*60*1000);
+      function tickLocal(){
+        const now = new Date();
+        const remaining = nextAllowed.getTime() - now.getTime();
+        if(remaining <= 0){
+          el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; <strong style="color:#07801a">(생성 가능)</strong>`;
+          clearCountdown();
+          updateButtonState();
+          return;
+        }
+        el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; | &nbsp; 남은 시간: ${formatRemaining(remaining)}`;
+      }
+      tickLocal();
+      __countdownInterval = setInterval(tickLocal, 1000);
+      return;
+    }
+    // deployed: weekly Monday rule -> compute next Monday allowed based on last generation
+    function getMonday(dt){
+      const d = new Date(dt);
+      const day = d.getDay();
+      const diff = (day + 6) % 7;
+      d.setDate(d.getDate() - diff);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    const lastMon = getMonday(last);
+    const nowMon = getMonday(new Date());
+    let nextAllowed;
+    if(lastMon < nowMon){
+      // generation from previous week -> allowed now; next allowed is next Monday
+      nextAllowed = new Date(nowMon.getTime());
+      nextAllowed.setDate(nextAllowed.getDate() + 7);
+    } else {
+      // already generated this week -> next allowed is next Monday after nowMon
+      nextAllowed = new Date(nowMon.getTime());
+      nextAllowed.setDate(nextAllowed.getDate() + 7);
+    }
+    function tickDeployed(){
       const now = new Date();
       const remaining = nextAllowed.getTime() - now.getTime();
       if(remaining <= 0){
@@ -443,8 +493,8 @@
       }
       el.innerHTML = `다음 생성: ${formatDateTime(nextAllowed)} &nbsp; | &nbsp; 남은 시간: ${formatRemaining(remaining)}`;
     }
-    tick();
-    __countdownInterval = setInterval(tick, 1000);
+    tickDeployed();
+    __countdownInterval = setInterval(tickDeployed, 1000);
   }
 
   if(cooldownInput){ cooldownInput.addEventListener('change', updateNextAllowedDisplay); }
