@@ -50,6 +50,17 @@
     <iframe src="https://coupa.ng/cf3Jkx" width="320" height="90" frameborder="0" scrolling="no" referrerpolicy="unsafe-url"></iframe>
   </div>
 
+  <section class="external-games" style="margin-top:18px;padding-top:12px;border-top:1px solid #eee">
+    <h2 style="font-size:1.1rem;margin:6px 0">외부 게임</h2>
+    <p style="margin:6px 0;color:#444">아래 링크를 클릭하면 해당 게임 페이지가 새 탭에서 열립니다:</p>
+    <ul style="margin:8px 0 0 18px;padding:0;color:#0b57d0;line-height:1.8">
+      <li><a href="https://k-trip.streamlit.app/" target="_blank" rel="noopener noreferrer">k-trip.streamlit.app — 전체 게임 목록</a></li>
+      <li><a href="https://k-trip.streamlit.app/Number_Game" target="_blank" rel="noopener noreferrer">Number_Game — 숫자 게임</a></li>
+      <li><a href="https://k-trip.streamlit.app/Simple_Quiz_Game" target="_blank" rel="noopener noreferrer">Simple_Quiz_Game — 간단 퀴즈 게임</a></li>
+      <li><a href="https://k-trip.streamlit.app/Google_Map" target="_blank" rel="noopener noreferrer">Google_Map — 지도/위치 보기</a></li>
+    </ul>
+  </section>
+
   <script>
     // 날짜 및 회차 계산 (기준일: 2024-08-24)
     (function(){
@@ -120,51 +131,3 @@
   </script>
 </body>
 </html>
-                "ip": ip,
-                "user_agent": user_agent,
-                "user_id": user_id,
-            }
-            collection.insert_one(visit_data)
-        except Exception:
-            # fail silently to avoid breaking the app if DB errors occur
-            pass
-
-if "visited" not in st.session_state:
-    log_visit()
-    st.session_state.visited = True
-if collection is not None:
-    total_count, today_count = fetch_counts()
-
-    col1, col2 = st.sidebar.columns(2)
-    col1.markdown(
-        f"<div style='width:100%;text-align:center;padding:6px 0;'>"
-        f"<div style='font-size:16px;margin-bottom:4px'>오늘 방문자 수</div>"
-        f"<div style='font-size:16px;font-weight:600'>{today_count}</div></div>",
-        unsafe_allow_html=True,
-    )
-    col2.markdown(
-        f"<div style='width:100%;text-align:center;padding:6px 0;'>"
-        f"<div style='font-size:16px;margin-bottom:4px'>총 방문자 수</div>"
-        f"<div style='font-size:16px;font-weight:600'>{total_count}</div></div>",
-        unsafe_allow_html=True,
-    )
-else:
-    st.sidebar.info("데이터베이스 연결이 없어 통계 미표시")
-
-# ads.txt 직접 반환
-query_params = st.query_params
-path = query_params.get("path", [""])[0] if query_params else ""
-
-# Streamlit has no `requested_page` attribute. Some hosting platforms
-# may pass a `path` query param when requesting a specific file
-# (e.g. ?path=ads.txt). Fallback to checking `path` for ads.txt.
-# Some older deployments or custom builds may set `st.requested_page`.
-# Check it safely with getattr to avoid AttributeError on newer Streamlit.
-requested_page = getattr(st, "requested_page", None)
-if requested_page == "ads.txt" or path == "ads.txt":
-    st.text("google.com, pub-8900421212808751, DIRECT, f08c47fec0942fa0")
-    st.stop()
-
-adsense_code = """
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
-     crossorigin="anonymous"></script>"""
