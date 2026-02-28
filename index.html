@@ -79,7 +79,7 @@
       <div class="hero-actions">
         <button id="resampleModelBtn" class="btn">모델로 5세트 생성</button>
         <label style="display:flex;align-items:center;gap:8px;color:#475569;font-size:0.95rem">
-          <span>쿨다운(분)</span>
+          <span>관리자모드</span>
           <input id="cooldownMinutes" type="number" min="1" step="1" value="1" style="width:90px;padding:6px;border-radius:8px;border:1px solid #e6eefc" />
         </label>
       </div>
@@ -200,7 +200,10 @@
   // function to load model probabilities and sample 5 sets
   function generateModelSets(){
     fetch('models/last_prediction.json')
-      .then(r=>r.json())
+      .then(r=>{
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.json();
+      })
       .then(data=>{
         const probs = data.probs || [];
         function sampleOneSet(){
@@ -268,12 +271,111 @@
           root.appendChild(card);
         });
       })
-      .catch(err=>{ console.warn('prediction load failed', err); });
+      .catch(err=>{
+        console.warn('prediction load failed', err);
+        const root = document.getElementById('modelSets');
+        if(!root) return;
+        root.innerHTML = '';
+        const msg = document.createElement('div');
+        msg.style.color = '#b91c1c';
+        msg.style.padding = '12px';
+        msg.style.background = '#fff6f6';
+        msg.style.borderRadius = '8px';
+        msg.style.maxWidth = '520px';
+        msg.style.margin = '0 auto';
+        msg.innerHTML = '<strong>예측 확률을 불러오지 못했습니다.</strong><br/>웹에 배포하신 경우 `models/last_prediction.json` 파일이 리포지토리의 `models/` 폴더에 있어야 합니다.';
+        const hint = document.createElement('div');
+        hint.style.marginTop = '8px';
+        hint.style.color = '#475569';
+        hint.style.fontSize = '0.9rem';
+        hint.textContent = '임시로 균등 분포로 생성하려면 아래 버튼을 누르세요.';
+        const fallbackBtn = document.createElement('button');
+        fallbackBtn.className = 'btn';
+        fallbackBtn.style.marginTop = '10px';
+        fallbackBtn.textContent = '임시 균등 생성';
+        fallbackBtn.addEventListener('click', function(){
+          const probs = new Array(45).fill(1/45);
+          renderSetsFromProbs(probs);
+        });
+        root.appendChild(msg);
+        root.appendChild(hint);
+        root.appendChild(fallbackBtn);
+      });
+  }
+
+  function renderSetsFromProbs(probs){
+    const sets = [];
+    function sampleOneSet(){
+      const p = probs.slice();
+      const chosen = [];
+      for(let k=0;k<6;k++){
+        const sum = p.reduce((a,b)=>a+b,0);
+        if(sum<=0) break;
+        const r = Math.random()*sum;
+        let acc = 0;
+        let idx = -1;
+        for(let i=0;i<p.length;i++){
+          acc += p[i];
+          if(acc>=r){ idx=i; break; }
+        }
+        if(idx===-1){ idx = p.findIndex(v=>v>0); }
+        if(idx===-1) break;
+        chosen.push(idx+1);
+        p[idx]=0;
+      }
+      return chosen.sort((a,b)=>a-b);
+    }
+    for(let s=0;s<5;s++) sets.push(sampleOneSet());
+    const root = document.getElementById('modelSets');
+    if(!root) return;
+    root.innerHTML='';
+    sets.forEach((set,idx)=>{
+      const card = document.createElement('div');
+      card.style.display='flex';
+      card.style.flexDirection='column';
+      card.style.alignItems='center';
+      card.style.gap='8px';
+      card.style.padding='8px';
+      card.style.background='#fff';
+      card.style.borderRadius='10px';
+      card.style.boxShadow='0 6px 18px rgba(15,23,36,0.06)';
+
+      const label = document.createElement('div');
+      label.textContent = (idx+1) + '세트';
+      label.style.fontWeight = '700';
+
+      const prob = set.reduce((acc,n)=>acc * (probs[n-1] || 0), 1);
+      const probDiv = document.createElement('div');
+      probDiv.style.fontSize = '0.85rem';
+      probDiv.style.color = '#64748b';
+      probDiv.textContent = '당첨확률: ' + formatProb(prob);
+
+      const numsWrap = document.createElement('div');
+      numsWrap.style.display='flex';
+      numsWrap.style.gap='8px';
+      set.forEach(n=>{
+        const c = document.createElement('div');
+        c.className = 'circle ' + colorClass(n);
+        c.textContent = n;
+        numsWrap.appendChild(c);
+      });
+
+      card.appendChild(label);
+      card.appendChild(probDiv);
+      card.appendChild(numsWrap);
+      root.appendChild(card);
+    });
   }
 
   // Weekly generation control (one generation per week, week starts on Monday)
   // cooldown in minutes control
   function getCooldownMinutes(){
+    // Prefer current input value (immediate feedback) then fall back to stored value
+    const input = document.getElementById('cooldownMinutes');
+    if(input){
+      const v = parseInt(input.value, 10);
+      if(!Number.isNaN(v)) return v;
+    }
     const stored = localStorage.getItem('modelCooldownMinutes');
     const hostname = window.location.hostname;
     const isLocal = hostname==='localhost' || hostname==='127.0.0.1' || window.location.protocol==='file:';
