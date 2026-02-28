@@ -11,55 +11,132 @@
   <!-- Meta verification placeholder (replace content with your code) -->
   <meta name="google-adsense-account" content="ca-pub-8900421212808751">
 
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{--cell-size:44px;--gap:10px}
-    html,body{height:100%;margin:0;padding:18px;font-family:AppleSDGothicNeo, 'Nanum Gothic', Arial, sans-serif;background:#fafafa;color:#222}
-    h1{font-size:2.2rem;margin:6px 0}
-    .meta{font-weight:600;margin-bottom:10px}
-    .controls{margin:12px 0}
-    .btn{display:inline-block;padding:10px 18px;background:#f0f0f0;border-radius:8px;border:none;cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.06);transition:transform .12s}
-    .btn:hover{transform:translateY(-2px)}
-    .board{margin-top:16px}
-    .sets{display:flex;flex-wrap:wrap;gap:12px}
-    .set{display:inline-flex;align-items:center;gap:8px;padding:6px}
+    :root{--cell-size:44px;--gap:12px;--max-width:1100px;--accent:#0b57d0}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;padding:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;background:linear-gradient(180deg,#fbfcff 0%, #f6f9ff 100%);color:#1b2330}
+    .wrap{max-width:var(--max-width);margin:28px auto;padding:26px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#3aa0ff);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem}
+    h1{margin:0;font-size:1.5rem}
+    nav a{color:#374151;text-decoration:none;margin-left:14px;font-weight:600}
+    .hero{margin-top:18px;background:linear-gradient(90deg,rgba(11,87,208,0.06),rgba(58,160,255,0.03));padding:18px;border-radius:14px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+    .hero-text{flex:1;min-width:220px}
+    .hero h2{margin:0;font-size:1.25rem}
+    .hero p{margin:6px 0;color:#475569}
+    .hero-actions{display:flex;gap:10px;align-items:center}
+    .btn{appearance:none;border:0;padding:10px 16px;border-radius:10px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(11,87,208,0.12);transition:transform .12s,box-shadow .12s}
+    .btn.secondary{background:#fff;color:var(--accent);border:1px solid rgba(11,87,208,0.12);box-shadow:none}
+    .btn:hover{transform:translateY(-3px)}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:18px;align-items:stretch}
+    .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(20,28,46,0.06);display:flex;flex-direction:column;gap:12px;align-items:stretch}
+    .top-row{display:flex;gap:12px;align-items:center}
+    .icon{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,rgba(11,87,208,0.08),#eaf4ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:1.05rem;flex:0 0 64px}
+    .card-body{flex:1 1 auto;display:flex;flex-direction:column;gap:6px;justify-content:center}
+    .card-title{font-weight:800;font-size:1rem;color:#0f1724}
+    .card-desc{color:#64748b;font-size:0.95rem}
+    .card-cta{display:block;margin-top:6px}
+    .btn.small{padding:10px 12px;border-radius:10px;width:100%;text-align:center}
+    .board{margin-top:18px}
+    .sets{display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+    .set{display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px;min-width:120px}
     .circle{width:var(--cell-size);height:var(--cell-size);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
     .dark-yellow{background:#FFD700;color:#222}
     .blue{background:#2f6fff}
     .red{background:#f24d4d}
     .gray{background:#9aa0a6}
     .green{background:#2fbf4a}
-    .note{margin-top:16px;color:#666}
+    .note{margin-top:14px;color:#475569}
     .banner{margin:22px 0;text-align:center}
-    @media (max-width:520px){:root{--cell-size:36px}.sets{gap:8px}}
+    footer{margin-top:26px;padding-top:16px;border-top:1px solid #eef2ff;color:#64748b;font-size:0.95rem}
+    @media (max-width:720px){:root{--cell-size:36px}.wrap{padding:16px}.hero{padding:12px}.cards{gap:10px}}
   </style>
 </head>
 <body>
-  <h1>로또 T아이</h1>
-  <div class="meta" id="roundInfo">로딩 중...</div>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">L</div>
+        <div>
+          <h1>LottoAI</h1>
+          <div style="color:#64748b;font-size:0.92rem">간편 로또 번호 생성기 · 외부 게임 모음</div>
+        </div>
+      </div>
+      <nav>
+        <a href="index.html">홈</a>
+        <a href="#games">게임</a>
+        <a href="#about">정보</a>
+      </nav>
+    </header>
 
-  <div class="controls">
-    <button id="genBtn" class="btn">로또번호 5세트 생성</button>
+    <section class="hero">
+      <div class="hero-text">
+        <h2>5세트의 로또 번호를 즉시 생성하세요</h2>
+        <p>깔끔하고 반응형 디자인 — 모바일에서도 편하게 사용하실 수 있습니다. 외부에 배포된 게임 링크도 아래에서 확인하세요.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="genBtn" class="btn">번호 5세트 생성</button>
+        <a class="btn secondary" href="#games">게임 보러가기</a>
+      </div>
+    </section>
+
+    <!-- games section moved below the lotto results -->
+
+    <section class="board" id="lotto">
+      <div style="text-align:center;color:#64748b;font-size:0.95rem;margin-bottom:12px;">로또번호 정보만 제공하며, 책임은 본인에게 있습니다.</div>
+      <div id="result" class="sets" aria-live="polite"></div>
+    </section>
+
+    <div id="after-lotto">
+      <section id="games" class="cards" aria-label="외부 게임 목록">
+        <article class="card">
+          <div class="card-body">
+            <div class="card-title">전체 게임</div>
+            <div class="card-desc">전체 게임 페이지 열기</div>
+          </div>
+          <div class="card-cta"><a href="https://k-trip.streamlit.app/" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <div class="card-title">Number_Game</div>
+            <div class="card-desc">숫자 맞추기 게임</div>
+          </div>
+          <div class="card-cta"><a href="https://k-trip.streamlit.app/Number_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <div class="card-title">Simple_Quiz_Game</div>
+            <div class="card-desc">간단한 퀴즈 게임</div>
+          </div>
+          <div class="card-cta"><a href="https://k-trip.streamlit.app/Simple_Quiz_Game" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        </article>
+
+        <article class="card">
+          <div class="card-body">
+            <div class="card-title">Google_Map</div>
+            <div class="card-desc">지도와 위치 탐색</div>
+          </div>
+          <div class="card-cta"><a href="https://k-trip.streamlit.app/Google_Map" target="_blank" rel="noopener noreferrer" class="btn small">열기</a></div>
+        </article>
+      </section>
+
+    <div class="banner">
+      <iframe src="https://coupa.ng/cf3Jkx" width="320" height="90" frameborder="0" scrolling="no" referrerpolicy="unsafe-url"></iframe>
+    </div>
+
+    <section style="margin-top:18px;padding-top:12px;border-top:1px solid #eef2ff">
+      <h3 id="about" style="margin:6px 0">정보</h3>
+      <p style="color:#64748b">로또AI는 간단한 번호 생성 도구입니다. 외부 링크는 별도 서비스로 연결됩니다.</p>
+    </section>
+
+    <footer>
+      © 2026 LottoAI · 제공된 외부 링크는 원 서비스의 소유자에 속합니다.
+    </footer>
   </div>
-
-  <div class="board">
-    <div id="result" class="sets" aria-live="polite"></div>
-    <div class="note">로또번호 정보만 제공하며, 투자의 책임은 본인에게 있습니다.</div>
-  </div>
-
-  <div class="banner">
-    <iframe src="https://coupa.ng/cf3Jkx" width="320" height="90" frameborder="0" scrolling="no" referrerpolicy="unsafe-url"></iframe>
-  </div>
-
-  <section class="external-games" style="margin-top:18px;padding-top:12px;border-top:1px solid #eee">
-    <h2 style="font-size:1.1rem;margin:6px 0">외부 게임</h2>
-    <p style="margin:6px 0;color:#444">아래 링크를 클릭하면 해당 게임 페이지가 새 탭에서 열립니다:</p>
-    <ul style="margin:8px 0 0 18px;padding:0;color:#0b57d0;line-height:1.8">
-      <li><a href="https://k-trip.streamlit.app/" target="_blank" rel="noopener noreferrer">k-trip.streamlit.app — 전체 게임 목록</a></li>
-      <li><a href="https://k-trip.streamlit.app/Number_Game" target="_blank" rel="noopener noreferrer">Number_Game — 숫자 게임</a></li>
-      <li><a href="https://k-trip.streamlit.app/Simple_Quiz_Game" target="_blank" rel="noopener noreferrer">Simple_Quiz_Game — 간단 퀴즈 게임</a></li>
-      <li><a href="https://k-trip.streamlit.app/Google_Map" target="_blank" rel="noopener noreferrer">Google_Map — 지도/위치 보기</a></li>
-    </ul>
-  </section>
 
   <script>
     // 날짜 및 회차 계산 (기준일: 2024-08-24)
@@ -81,7 +158,11 @@
       const d = String(saturday.getDate()).padStart(2,'0');
       const dateStr = `${y}.${m}.${d}`;
 
-      document.getElementById('roundInfo').textContent = `${currentRound}회차 (${dateStr})`;
+      const roundText = `${currentRound}회차 (${dateStr})`;
+      const roundLabelEl = document.getElementById('roundLabel');
+      if(roundLabelEl) roundLabelEl.textContent = roundText;
+      const roundInfoEl = document.getElementById('roundInfo');
+      if(roundInfoEl) roundInfoEl.textContent = roundText;
     })();
 
     // number generation
@@ -110,15 +191,19 @@
         container.className='set';
         const label = document.createElement('div');
         label.textContent = (idx+1) + '세트:';
-        label.style.fontWeight='600';
-        label.style.marginRight='6px';
+        label.style.fontWeight='700';
         container.appendChild(label);
+        const numbersWrap = document.createElement('div');
+        numbersWrap.style.display = 'flex';
+        numbersWrap.style.gap = '8px';
+        numbersWrap.style.marginTop = '6px';
         set.forEach(n=>{
           const c = document.createElement('div');
           c.className = 'circle ' + colorClass(n);
           c.textContent = n;
-          container.appendChild(c);
+          numbersWrap.appendChild(c);
         });
+        container.appendChild(numbersWrap);
         root.appendChild(container);
       });
     }
