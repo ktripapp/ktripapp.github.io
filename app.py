@@ -159,13 +159,13 @@ st.markdown("""
 # 타이틀 섹션
 st.markdown("""
 <div class="title-container">
-    <h1>🎮 게임 앱</h1>
-    <p>누구나 쉽게 즐기는 게임!</p>
+    <h1>🎮 갓생 앱</h1>
+    <p>누구나 쉽게 즐기는 갓생!</p>
 </div>
 """, unsafe_allow_html=True)
 
 # 피처 섹션
-st.markdown("### ✨ 게임 앱 특징")
+st.markdown("### ✨ 갓생 앱 특징")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -173,8 +173,8 @@ with col1:
     st.markdown("""
     <div class="feature-box">
         <div class="feature-icon">🎯</div>
-        <div class="feature-title">다양한 게임</div>
-        <div class="feature-text">숫자, 퀴즈, 오목 등 다양한 게임 즐기기</div>
+        <div class="feature-title">다양한 갓생</div>
+        <div class="feature-text">숫자, 퀴즈, 오목 등 다양한 갓생 즐기기</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -183,7 +183,7 @@ with col2:
     <div class="feature-box">
         <div class="feature-icon">🏆</div>
         <div class="feature-title">점수 기록</div>
-        <div class="feature-text">각 게임의 성적을 기록하고 추적하기</div>
+        <div class="feature-text">각 갓생의 성적을 기록하고 추적하기</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -192,7 +192,7 @@ with col3:
     <div class="feature-box">
         <div class="feature-icon">⚡</div>
         <div class="feature-title">빠른 플레이</div>
-        <div class="feature-text">언제 어디서나 빠르게 게임 시작하기</div>
+        <div class="feature-text">언제 어디서나 빠르게 갓생 시작하기</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -201,12 +201,12 @@ with col4:
     <div class="feature-box">
         <div class="feature-icon">🎁</div>
         <div class="feature-title">재미있는 경험</div>
-        <div class="feature-text">친구들과 함께 즐기는 게임 체험</div>
+        <div class="feature-text">친구들과 함께 즐기는 갓생 체험</div>
     </div>
     """, unsafe_allow_html=True)
 
 # 게임 섹션
-st.markdown('<div class="category-header">🎲 게임 시작하기</div>', unsafe_allow_html=True)
+st.markdown('<div class="category-header">🎲 갓생 시작하기</div>', unsafe_allow_html=True)
 
 col_game1, col_game2 = st.columns(2)
 
