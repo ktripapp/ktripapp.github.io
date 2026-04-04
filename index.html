@@ -4,34 +4,66 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="google-adsense-account" content="ca-pub-8900421212808751">
-  <title>Redirecting…</title>
+  <title>Godsaeng — 앱 모음</title>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
      crossorigin="anonymous"></script>
 </head>
 <body>
-  <script>
-    // If the page is loaded inside an iframe (e.g. AdSense preview),
-    // avoid auto-redirect so the preview can load. Otherwise redirect after 500ms.
-    if (window.top !== window.self) {
-      // Provide a clickable link for previewers and automated tools.
-      const container = document.createElement('div');
-      container.style.cssText = "display:flex;align-items:center;justify-content:center;height:100vh;padding:16px;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;";
-      container.innerHTML = '<a href="https://godsaeng.streamlit.app/" target="_blank" rel="noopener noreferrer" style="font-size:1.1rem;">여기를 클릭하면 Godsaeng으로 이동합니다.</a>';
-      document.body.appendChild(container);
-    } else {
-      setTimeout(() => {
-        try {
-          window.location.replace('https://godsaeng.streamlit.app/');
-        } catch (e) {
-          window.location.href = 'https://godsaeng.streamlit.app/';
-        }
-      }, 500);
-    }
-  </script>
-  <noscript>
-    <div style="display:flex;align-items:center;justify-content:center;height:100vh;padding:16px;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;">
-      <a href="https://godsaeng.streamlit.app/" target="_blank" rel="noopener noreferrer" style="font-size:1.1rem;">여기를 클릭하면 Godsaeng으로 이동합니다.</a>
+  <header style="background:linear-gradient(135deg,#4f46e5 0%,#06b6d4 100%);padding:40px 20px;color:#fff;text-align:center;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;max-width:900px;margin:0 auto;">
+      <!-- Simple character SVG -->
+      <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+        <rect width="72" height="72" rx="16" fill="#fff" opacity="0.08"/>
+        <circle cx="36" cy="28" r="12" fill="#fff" opacity="0.95"/>
+        <path d="M22 52c3-6 11-8 14-8s11 2 14 8" stroke="#ffffff" stroke-opacity="0.95" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="30.5" cy="26" r="1.8" fill="#4f46e5"/>
+        <circle cx="41.5" cy="26" r="1.8" fill="#4f46e5"/>
+      </svg>
+      <div style="text-align:left;">
+        <h1 style="margin:0;font-size:2rem;letter-spacing:0.4px;">Godsaeng</h1>
+        <p style="margin:8px 0 0;opacity:0.95;max-width:700px;">다양한 미니 게임과 인터랙티브 경험을 한곳에 모은 웹 앱 컬렉션 — 간단한 숫자 게임부터 MBTI 테스트까지, 누구나 쉽게 즐길 수 있습니다.</p>
+      </div>
     </div>
+  </header>
+
+  <main style="font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;max-width:1100px;margin:28px auto;padding:0 20px;">
+    <section style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;">
+      <div>
+        <h2 style="margin-top:0;color:#111">📊 Godsaeng 앱 소개</h2>
+        <p style="color:#333;line-height:1.6;">Godsaeng은 가벼운 게임과 테스트를 통해 짧은 시간에 재미와 몰입을 제공하는 웹 앱 모음입니다. 친구들과 점수를 겨루거나, 혼자 집중해 기록을 세워보세요. 아래에서 제공되는 앱을 클릭하면 즉시 해당 서비스로 이동합니다.</p>
+
+        <h3 style="margin-bottom:8px;color:#111">🎮 제공 기능</h3>
+        <ul style="color:#444;line-height:1.6">
+          <li><strong>Number Game</strong> — 직관적인 숫자 추측 게임으로 반사 신경과 운을 시험해보세요.</li>
+          <li><strong>Simple Quiz Game</strong> — 다양한 주제의 객관식 퀴즈로 지식을 확인하세요.</li>
+          <li><strong>Gomoku &amp; Bingo</strong> — 고전 오목과 빙고를 혼합한 캐주얼 게임.</li>
+          <li><strong>MBTI Game</strong> — 간단한 질문으로 성격 유형을 알아보는 테스트.</li>
+        </ul>
+
+        <p style="margin-top:18px;color:#555;">각 앱 페이지에는 간단한 설명과 실행 버튼이 있으며, 실제 앱은 Streamlit으로 배포되어 있습니다. '실행하기' 버튼을 누르면 해당 Streamlit 앱으로 이동합니다.</p>
+      </div>
+
+      <aside style="background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(16,24,40,0.06);padding:20px;">
+        <h3 style="margin-top:0;color:#111">바로가기</h3>
+        <a href="https://godsaeng.streamlit.app/" style="display:block;margin-bottom:12px;padding:12px 14px;background:linear-gradient(90deg,#06b6d4,#4f46e5);color:#fff;border-radius:10px;text-decoration:none;text-align:center;font-weight:800;">Open Godsaeng</a>
+        <nav style="display:grid;gap:12px;margin-top:12px;">
+          <a href="Number_Game.html" style="display:block;padding:12px 14px;background:#0ea5e9;color:#fff;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">Number Game</a>
+          <a href="Simple_Quiz_Game.html" style="display:block;padding:12px 14px;background:#10b981;color:#fff;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">Simple Quiz Game</a>
+          <a href="Gomoku_Bingo_Game.html" style="display:block;padding:12px 14px;background:#fb923c;color:#fff;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">Gomoku Bingo</a>
+          <a href="MBTI_Game.html" style="display:block;padding:12px 14px;background:#8b5cf6;color:#fff;border-radius:10px;text-decoration:none;text-align:center;font-weight:700;">MBTI Game</a>
+        </nav>
+        <p style="font-size:0.85rem;color:#666;margin-top:14px;">버튼을 누르면 동일 탭에서 각 앱 설명 페이지로 이동합니다. 페이지에서 '실행하기'를 눌러 Streamlit 앱을 여세요.</p>
+      </aside>
+    </section>
+
+    <footer style="margin-top:30px;padding:18px 12px;text-align:center;color:#666;font-size:0.95rem;">
+      <div>© Godsaeng — 멋진 순간을 만들어 드립니다.</div>
+    </footer>
+  </main>
+
+  <noscript>
+    <div style="padding:24px;text-align:center;">JavaScript가 비활성화되어 있습니다. 아래 링크로 이동하세요:<br><a href="Number_Game.html">Number Game</a> · <a href="Simple_Quiz_Game.html">Simple Quiz Game</a> · <a href="Gomoku_Bingo_Game.html">Gomoku &amp; Bingo</a> · <a href="MBTI_Game.html">MBTI Game</a></div>
   </noscript>
+
 </body>
 </html>
