@@ -39,45 +39,18 @@
       padding: 36px 20px 0;
     }
 
-    /* INTRO GRID */
-    .intro-grid {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 28px;
-      align-items: start;
+    /* INTRO */
+    .intro-section {
+      max-width: 760px;
+      margin: 0 auto 8px;
+      text-align: center;
     }
-    @media (max-width: 700px) {
-      .intro-grid { grid-template-columns: 1fr; }
-      .header-inner { flex-direction: column; text-align: center; }
-      header h1 { font-size: 1.6rem; }
-      header p { font-size: 0.92rem; }
-      main { padding: 24px 16px 0; }
-      .section-title { font-size: 1.1rem; margin: 36px 0 16px; }
-      .cards-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 400px) {
-      header h1 { font-size: 1.35rem; }
-      header { padding: 28px 16px 24px; }
-    }
-
-    .intro-text h2 { margin-top: 0; color: #111; font-size: 1.3rem; }
-    .intro-text p { color: #374151; line-height: 1.7; margin-bottom: 12px; }
-    .intro-text h3 { color: #111; margin: 20px 0 8px; font-size: 1.05rem; }
-    .intro-text ul { color: #444; line-height: 1.8; padding-left: 20px; }
-    .intro-text ul li { list-style: disc; margin-bottom: 4px; }
-
-    /* ASIDE NAV */
-    aside {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 6px 20px rgba(16, 24, 40, 0.07);
-      padding: 22px;
-    }
-    aside h3 { margin-top: 0; color: #111; margin-bottom: 14px; }
+    .intro-section h2 { color: #111; font-size: 1.3rem; margin-bottom: 14px; }
+    .intro-section p { color: #374151; line-height: 1.7; margin-bottom: 12px; }
     .open-btn {
-      display: block;
-      margin-bottom: 14px;
-      padding: 14px;
+      display: inline-block;
+      margin-top: 8px;
+      padding: 14px 32px;
       background: linear-gradient(90deg, #06b6d4, #4f46e5);
       color: #fff;
       border-radius: 10px;
@@ -86,23 +59,21 @@
       font-weight: 800;
       font-size: 1rem;
     }
-    nav { display: grid; gap: 12px; }
-    nav a {
-      display: block;
-      padding: 12px 14px;
-      color: #fff;
-      border-radius: 10px;
-      text-decoration: none;
-      text-align: center;
-      font-weight: 700;
-      transition: filter 0.15s;
+    .open-btn:hover { filter: brightness(1.08); }
+
+    @media (max-width: 700px) {
+      .header-inner { flex-direction: column; text-align: center; }
+      header h1 { font-size: 1.6rem; }
+      header p { font-size: 0.92rem; }
+      main { padding: 24px 16px 0; }
+      .section-title { font-size: 1.1rem; margin: 36px 0 16px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .open-btn { display: block; padding: 14px; }
     }
-    nav a:hover { filter: brightness(1.1); }
-    .btn-number  { background: #0ea5e9; }
-    .btn-quiz    { background: #10b981; }
-    .btn-gomoku  { background: #fb923c; }
-    .btn-mbti    { background: #8b5cf6; }
-    aside small { display: block; color: #9ca3af; font-size: 0.83rem; margin-top: 12px; line-height: 1.5; }
+    @media (max-width: 400px) {
+      header h1 { font-size: 1.35rem; }
+      header { padding: 28px 16px 24px; }
+    }
 
     /* GAME CARDS */
     .section-title {
@@ -141,6 +112,20 @@
       font-weight: 700;
       text-align: center;
     }
+    .game-card .btn-play {
+      background: transparent;
+      border: 2px solid currentColor;
+      margin-top: 4px;
+    }
+    .game-card .btn-play.c1 { color: #0ea5e9; }
+    .game-card .btn-play.c2 { color: #10b981; }
+    .game-card .btn-play.c3 { color: #fb923c; }
+    .game-card .btn-play.c4 { color: #8b5cf6; }
+    .game-card .btn-play:hover { color: #fff; }
+    .game-card .btn-play.c1:hover { background: #0ea5e9; border-color: #0ea5e9; }
+    .game-card .btn-play.c2:hover { background: #10b981; border-color: #10b981; }
+    .game-card .btn-play.c3:hover { background: #fb923c; border-color: #fb923c; }
+    .game-card .btn-play.c4:hover { background: #8b5cf6; border-color: #8b5cf6; }
 
     /* FAQ */
     .faq { margin-bottom: 48px; }
@@ -185,34 +170,11 @@
   </header>
 
   <main>
-    <section class="intro-grid">
-      <div class="intro-text">
-        <h2>📊 갓생 플랫폼 소개</h2>
-        <p>갓생은 가벼운 게임과 테스트를 통해 짧은 시간에 재미와 몰입을 제공하는 웹 앱 모음입니다. 별도의 설치나 로그인 없이 브라우저에서 바로 즐길 수 있으며, 친구들과 점수를 겨루거나 혼자 기록에 도전해 보세요.</p>
-        <p>모든 게임은 PC와 모바일 환경 모두에서 최적화되어 있으며, 가벼운 캐주얼 플레이를 추구합니다. 지하철에서 짬 날 때, 쉬는 시간 5분, 친구와 함께하는 소소한 대결까지 — 어떤 상황에서도 갓생을 즐겨보세요!</p>
-
-        <h3>🎮 제공 게임 목록</h3>
-        <ul>
-          <li><strong>Number Game</strong> — 주어진 범위 내에서 숫자를 추측하며 빠른 판단력과 운을 시험해보는 직관적인 게임입니다.</li>
-          <li><strong>Simple Quiz Game</strong> — 다양한 주제와 난이도의 객관식 퀴즈로 지식을 확인하고 타이머 모드로 긴장감을 높여보세요.</li>
-          <li><strong>Gomoku &amp; Bingo</strong> — 고전 오목의 전략적 재미와 빙고의 우연성을 결합한 캐주얼 멀티 라운드 게임입니다.</li>
-          <li><strong>MBTI Game</strong> — 간단한 질문으로 성격 경향을 파악하는 MBTI 스타일 테스트로, 결과를 친구와 공유해 보세요.</li>
-        </ul>
-
-        <p style="margin-top: 18px; color: #555;">각 게임은 Streamlit으로 배포되어 있으며, 아래 카드 또는 바로가기 버튼을 통해 즉시 실행할 수 있습니다.</p>
-      </div>
-
-      <aside>
-        <h3>바로가기</h3>
-        <a href="https://godsaeng.streamlit.app/" class="open-btn">🚀 Open Godsaeng</a>
-        <nav>
-          <a href="Number_Game.html" class="btn-number">🔢 Number Game</a>
-          <a href="Simple_Quiz_Game.html" class="btn-quiz">📝 Simple Quiz Game</a>
-          <a href="Gomoku_Bingo_Game.html" class="btn-gomoku">⚫ Gomoku Bingo</a>
-          <a href="MBTI_Game.html" class="btn-mbti">🧠 MBTI Game</a>
-        </nav>
-        <small>버튼을 누르면 각 앱 설명 페이지로 이동합니다. '실행하기'를 눌러 Streamlit 앱을 여세요.</small>
-      </aside>
+    <section class="intro-section">
+      <h2>📊 갓생 플랫폼 소개</h2>
+      <p>갓생은 가벼운 게임과 테스트를 통해 짧은 시간에 재미와 몰입을 제공하는 웹 앱 모음입니다. 별도의 설치나 로그인 없이 브라우저에서 바로 즐길 수 있으며, 친구들과 점수를 겨루거나 혼자 기록에 도전해 보세요.</p>
+      <p>모든 게임은 PC와 모바일 환경 모두에서 최적화되어 있으며, 가벼운 캐주얼 플레이를 추구합니다. 지하철에서 짬 날 때, 쉬는 시간 5분, 친구와 함께하는 소소한 대결까지 — 어떤 상황에서도 갓생을 즐겨보세요!</p>
+      <a href="https://godsaeng.streamlit.app/" class="open-btn" target="_blank" rel="noopener">🚀 Open Godsaeng</a>
     </section>
 
     <!-- GAME DETAIL CARDS -->
@@ -223,24 +185,28 @@
         <h3>Number Game</h3>
         <p>지정된 숫자 범위 내에서 정답을 추측해 점수를 쌓는 빠른 반응 게임. 힌트를 통해 범위를 좁혀가며 최소 시도로 정답을 맞혀보세요. 최고 점수 기록 도전!</p>
         <a href="Number_Game.html" style="background:#0ea5e9;">자세히 보기 →</a>
+        <a href="https://godsaeng.streamlit.app/Number_Game" class="btn-play c1">🚀 바로 실행하기</a>
       </div>
       <div class="game-card">
         <span class="emoji">📝</span>
         <h3>Simple Quiz Game</h3>
         <p>상식, 과학, 역사 등 다양한 주제의 4지선다 퀴즈. 타이머 모드에서 제한 시간 안에 정확히 답하면 보너스 점수! 혼자 또는 친구와 함께 도전하세요.</p>
         <a href="Simple_Quiz_Game.html" style="background:#10b981;">자세히 보기 →</a>
+        <a href="https://godsaeng.streamlit.app/Simple_Quiz_Game" class="btn-play c2">🚀 바로 실행하기</a>
       </div>
       <div class="game-card">
         <span class="emoji">⚫</span>
         <h3>Gomoku &amp; Bingo</h3>
         <p>5개를 먼저 연결하는 오목 규칙에 빙고 카드 개념을 결합한 독특한 캐주얼 게임. 전략적인 수 읽기와 운 요소가 절묘하게 어우러집니다.</p>
         <a href="Gomoku_Bingo_Game.html" style="background:#fb923c;">자세히 보기 →</a>
+        <a href="https://godsaeng.streamlit.app/Gomoku_%26_Bingo_Game" class="btn-play c3">🚀 바로 실행하기</a>
       </div>
       <div class="game-card">
         <span class="emoji">🧠</span>
         <h3>MBTI Game</h3>
         <p>10~20개의 짧은 질문으로 나의 성격 경향을 알아보는 MBTI 스타일 테스트. 결과 요약과 함께 친구에게 공유하고 서로 비교해 보세요. 전문 검사 대체 불가.</p>
         <a href="MBTI_Game.html" style="background:#8b5cf6;">자세히 보기 →</a>
+        <a href="https://godsaeng.streamlit.app/MBTI_Game" class="btn-play c4">🚀 바로 실행하기</a>
       </div>
     </div>
 
