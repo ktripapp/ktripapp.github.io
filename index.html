@@ -3,18 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="google-adsense-account" content="ca-pub-8900421212808751">
   <title>Redirecting…</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751"
+     crossorigin="anonymous"></script>
 </head>
 <body>
   <script>
-    // 딜레이 후 리다이렉트(디버깅 용이성 확보) 및 안전한 fallback 처리
-    setTimeout(() => {
-      try {
-        window.location.replace('https://godsaeng.streamlit.app/');
-      } catch (e) {
-        window.location.href = 'https://godsaeng.streamlit.app/';
-      }
-    }, 500);
+    // If the page is loaded inside an iframe (e.g. AdSense preview),
+    // avoid auto-redirect so the preview can load. Otherwise redirect after 500ms.
+    if (window.top !== window.self) {
+      // Provide a clickable link for previewers and automated tools.
+      const container = document.createElement('div');
+      container.style.cssText = "display:flex;align-items:center;justify-content:center;height:100vh;padding:16px;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;";
+      container.innerHTML = '<a href="https://godsaeng.streamlit.app/" target="_blank" rel="noopener noreferrer" style="font-size:1.1rem;">여기를 클릭하면 Godsaeng으로 이동합니다.</a>';
+      document.body.appendChild(container);
+    } else {
+      setTimeout(() => {
+        try {
+          window.location.replace('https://godsaeng.streamlit.app/');
+        } catch (e) {
+          window.location.href = 'https://godsaeng.streamlit.app/';
+        }
+      }, 500);
+    }
   </script>
   <noscript>
     <div style="display:flex;align-items:center;justify-content:center;height:100vh;padding:16px;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Nanum Gothic', Arial, sans-serif;">
