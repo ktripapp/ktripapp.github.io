@@ -280,13 +280,26 @@ collection = None
 if client:
     try:
         client.admin.command("ping")
-        db = client.get_database("streamlit")
+        # Determine DB name: prefer st.secrets['mongo']['db'], then env vars, fallback to 'ktrip'
+        db_name = None
+        try:
+            if hasattr(st, "secrets") and st.secrets.get("mongo"):
+                creds = st.secrets["mongo"]
+                if isinstance(creds, dict) and creds.get("db"):
+                    db_name = creds.get("db")
+        except Exception:
+            db_name = None
+
+        if not db_name:
+            db_name = os.getenv("MONGO_DB") or os.getenv("MONGO_DATABASE") or "ktrip"
+
+        db = client.get_database(db_name)
         collection = db.get_collection("visitor")
     except Exception:
         collection = None
         st.sidebar.warning("MongoDB 통계 기능 비활성화")
 else:
-    st.sidebar.info("MongoDB 연결 정보가 없습니다. (secrets['mongo'] 또는 MONGO_URI 사용)")
+    st.sidebar.info("MongoDB 연결 정보가 없습니다. (secrets['mongo'] 또는 MONGO_URI 사용). Set MONGO_DB to choose DB (default 'ktrip').")
 
 
 # 조회/집계용 함수는 `st.cache_data`로 분리하여 캐시합니다.
