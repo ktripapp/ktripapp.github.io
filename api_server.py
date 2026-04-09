@@ -1,18 +1,18 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import pandas as pd
 
 app = FastAPI()
 
 # CORS for local testing and deployed site
-from fastapi.middleware.cors import CORSMiddleware
 origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
-    "https://ktripapp-github-io.onrender.com"
+    "https://ktripapp.github.io"
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -24,21 +24,13 @@ app.add_middleware(
 
 
 def _serialize_doc(doc: dict):
-    # Convert common non-JSON types (ObjectId, datetime) to strings
-    try:
-        from bson import ObjectId
-    except Exception:
-        ObjectId = None
-
+    # Remove `_id` and convert datetimes to ISO strings for JSON
     out = {}
     for k, v in doc.items():
-        if ObjectId is not None and isinstance(v, ObjectId):
-            out[k] = str(v)
+        if k == '_id':
+            continue
         elif hasattr(v, 'isoformat'):
-            try:
-                out[k] = v.isoformat()
-            except Exception:
-                out[k] = str(v)
+            out[k] = v.isoformat()
         else:
             out[k] = v
     return out
