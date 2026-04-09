@@ -121,3 +121,75 @@ def get_data():
             return JSONResponse(status_code=500, content={"error": "failed serializing data", "detail": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": "internal server error", "detail": str(e)})
+
+
+@app.get('/api/extra_series')
+def extra_series():
+    """Return extra indicator series from other collections in the `coins` DB.
+
+    Collections/fields:
+    - onchain_data.mvrv -> returns list of {date,value}
+    - ETF_flows.bitb    -> returns list of {date,value}
+    - cryptofg.value    -> returns list of {date,value}
+    - bond_yields.m2sl  -> returns list of {date,value}
+
+    Falls back with 500 if MongoDB isn't available.
+    """
+    mongo_uri = os.environ.get('MONGO_URI')
+    if not mongo_uri:
+        try:
+            import secrets_local
+            mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+        except Exception:
+            mongo_uri = None
+
+    if not mongo_uri:
+        return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
+
+    try:
+        from pymongo import MongoClient
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
+
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['coins']
+
+        out = {}
+        # helper to read a collection and pick date + field
+        def read_series(coll_name, field_name):
+            coll = db[coll_name]
+            cursor = coll.find({},{'_id':0, 'date':1, field_name:1}).sort('date', 1)
+            arr = []
+            for d in cursor:
+                # normalize date and value
+                date = d.get('date')
+                v = d.get(field_name)
+                if date is None or v is None:
+                    continue
+                # if date is a datetime-like, isoformat it; else stringify
+                try:
+                    if hasattr(date, 'isoformat'):
+                        ds = date.isoformat()
+                    else:
+                        ds = str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(v)
+                except Exception:
+                    try:
+                        vv = float(str(v).replace(',',''))
+                    except Exception:
+                        continue
+                arr.append({'date': ds, 'value': vv})
+            return arr
+
+        out['onchain_mvrv'] = read_series('onchain_data', 'mvrv')
+        out['etf_bitb'] = read_series('ETF_flows', 'bitb')
+        out['fear_greed'] = read_series('cryptofg', 'value')
+        out['bond_m2sl'] = read_series('bond_yields', 'm2sl')
+
+        return out
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
