@@ -193,3 +193,195 @@ def extra_series():
         return out
     except Exception as e:
         return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+
+
+@app.get('/api/onchain_data')
+def onchain_data():
+    """Backward-compatible endpoint returning onchain `mvrv` series.
+
+    Returns list of {date, value} similar to what `/api/extra_series` provides
+    under `onchain_mvrv`.
+    """
+    mongo_uri = os.environ.get('MONGO_URI')
+    if not mongo_uri:
+        try:
+            import secrets_local
+            mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+        except Exception:
+            mongo_uri = None
+
+    if not mongo_uri:
+        return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
+
+    try:
+        from pymongo import MongoClient
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
+
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['coins']
+        coll = db['onchain_data']
+        cursor = coll.find({}, {'_id':0, 'date':1, 'mvrv':1}).sort('date', 1)
+        arr = []
+        for d in cursor:
+            date = d.get('date')
+            v = d.get('mvrv')
+            if date is None or v is None:
+                continue
+            try:
+                ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+            except Exception:
+                ds = str(date)
+            try:
+                vv = float(v)
+            except Exception:
+                try:
+                    vv = float(str(v).replace(',',''))
+                except Exception:
+                    continue
+            arr.append({'date': ds, 'value': vv})
+        return arr
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+
+
+@app.get('/api/ETF_flows')
+def etf_flows():
+    """Return ETF flows `bitb` series as list of {date,value}."""
+    mongo_uri = os.environ.get('MONGO_URI')
+    if not mongo_uri:
+        try:
+            import secrets_local
+            mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+        except Exception:
+            mongo_uri = None
+
+    if not mongo_uri:
+        return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
+
+    try:
+        from pymongo import MongoClient
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
+
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['coins']
+        coll = db['ETF_flows']
+        cursor = coll.find({}, {'_id':0, 'date':1, 'bitb':1}).sort('date', 1)
+        arr = []
+        for d in cursor:
+            date = d.get('date')
+            v = d.get('bitb')
+            if date is None or v is None:
+                continue
+            try:
+                ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+            except Exception:
+                ds = str(date)
+            try:
+                vv = float(v)
+            except Exception:
+                try:
+                    vv = float(str(v).replace(',',''))
+                except Exception:
+                    continue
+            arr.append({'date': ds, 'value': vv})
+        return arr
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+
+
+@app.get('/api/cryptofg')
+def cryptofg():
+    """Return Fear/Greed `value` series as list of {date,value}."""
+    mongo_uri = os.environ.get('MONGO_URI')
+    if not mongo_uri:
+        try:
+            import secrets_local
+            mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+        except Exception:
+            mongo_uri = None
+
+    if not mongo_uri:
+        return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
+
+    try:
+        from pymongo import MongoClient
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
+
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['coins']
+        coll = db['cryptofg']
+        cursor = coll.find({}, {'_id':0, 'date':1, 'value':1}).sort('date', 1)
+        arr = []
+        for d in cursor:
+            date = d.get('date')
+            v = d.get('value')
+            if date is None or v is None:
+                continue
+            try:
+                ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+            except Exception:
+                ds = str(date)
+            try:
+                vv = float(v)
+            except Exception:
+                try:
+                    vv = float(str(v).replace(',',''))
+                except Exception:
+                    continue
+            arr.append({'date': ds, 'value': vv})
+        return arr
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+
+
+@app.get('/api/bond_yields')
+def bond_yields():
+    """Return bond yields `m2sl` series as list of {date,value}."""
+    mongo_uri = os.environ.get('MONGO_URI')
+    if not mongo_uri:
+        try:
+            import secrets_local
+            mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+        except Exception:
+            mongo_uri = None
+
+    if not mongo_uri:
+        return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
+
+    try:
+        from pymongo import MongoClient
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
+
+    try:
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        db = client['coins']
+        coll = db['bond_yields']
+        cursor = coll.find({}, {'_id':0, 'date':1, 'm2sl':1}).sort('date', 1)
+        arr = []
+        for d in cursor:
+            date = d.get('date')
+            v = d.get('m2sl')
+            if date is None or v is None:
+                continue
+            try:
+                ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+            except Exception:
+                ds = str(date)
+            try:
+                vv = float(v)
+            except Exception:
+                try:
+                    vv = float(str(v).replace(',',''))
+                except Exception:
+                    continue
+            arr.append({'date': ds, 'value': vv})
+        return arr
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
