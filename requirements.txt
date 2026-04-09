@@ -47,3 +47,7 @@ python-dotenv
 pymongo
 dnspython<3.0.0
 vega_datasets
+Flask
+flask-cors
+fastapi
+uvicorn
