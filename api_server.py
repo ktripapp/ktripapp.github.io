@@ -71,31 +71,44 @@ def get_data():
     try:
         mongo_uri = os.environ.get('MONGO_URI')
         # fallback to local secrets_local.py for development
-            if not mongo_uri:
-                try:
-                    import secrets_local
-                    mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
-                except Exception:
-                    mongo_uri = None
-            if mongo_uri:
+        if not mongo_uri:
+            try:
+                import secrets_local
+                mongo_uri = getattr(secrets_local, 'MONGO_URI', None)
+            except Exception:
+                mongo_uri = None
+
+        # If we have a Mongo URI, try to fetch from MongoDB
+        if mongo_uri:
             try:
                 from pymongo import MongoClient
             except Exception as e:
                 return JSONResponse(status_code=500, content={"error": "pymongo not installed", "detail": str(e)})
 
+            try:
                 client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
-            db = client['coins']
-            coll = db['historical_daily_data']
-            cursor = coll.find().sort('date', 1)
-            docs = [_serialize_doc(d) for d in cursor]
-            return docs
+                db = client['coins']
+                coll = db['historical_daily_data']
+                cursor = coll.find().sort('date', 1)
+                docs = [_serialize_doc(d) for d in cursor]
+                return docs
+            except Exception as e:
+                return JSONResponse(status_code=500, content={"error": "mongodb connection failed", "detail": str(e)})
 
         # Fallback to data.parquet
         file_path = os.path.join(os.path.dirname(__file__), 'data.parquet')
         if not os.path.exists(file_path):
             return JSONResponse(status_code=500, content={"error": "no data source available", "detail": "MONGO_URI not set and data.parquet missing"})
 
-        df = pd.read_parquet(file_path)
-        return df.to_dict(orient='records')
+        try:
+            df = pd.read_parquet(file_path)
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"error": "failed reading parquet", "detail": str(e)})
+
+        try:
+            records = df.to_dict(orient='records')
+            return records
+        except Exception as e:
+            return JSONResponse(status_code=500, content={"error": "failed serializing data", "detail": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": "internal server error", "detail": str(e)})
