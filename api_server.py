@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import requests
 import os
 import pandas as pd
+import logging
+import traceback
 
 app = FastAPI()
 
@@ -127,21 +128,8 @@ def _forward_to_render(path: str, timeout: int = 15):
 
     The server-side `RENDER_API_KEY` is injected into the forwarded request.
     """
-    render_base = os.environ.get('RENDER_BASE', 'https://ktripapp-github-io.onrender.com')
-    render_key = os.environ.get('RENDER_API_KEY')
-    url = render_base.rstrip('/') + '/' + path.lstrip('/')
-    headers = {}
-    if render_key:
-        # add both common header forms to increase compatibility
-        headers['Authorization'] = f'Bearer {render_key}'
-        headers['X-API-Key'] = render_key
-    r = requests.get(url, headers=headers, timeout=timeout)
-    # try to propagate status and JSON content
-    try:
-        payload = r.json()
-    except Exception:
-        payload = r.text
-    return r.status_code, payload
+    # Remote forwarding removed. This function is no longer used.
+    raise RuntimeError('_forward_to_render has been removed')
 
 
 def _serialize_doc(doc: dict):
@@ -207,26 +195,33 @@ def get_data():
                 cursor = coll.find().sort('date', 1)
                 docs = [_serialize_doc(d) for d in cursor]
                 return docs
-            except Exception:
-                return JSONResponse(status_code=500, content={"error": "mongodb read failed"})
+            except Exception as e:
+                logging.exception('MongoDB read failed in /api/historical_daily_data')
+                return JSONResponse(status_code=500, content={"error": "mongodb read failed", "detail": str(e)})
 
         # Fallback to data.parquet
         file_path = os.path.join(os.path.dirname(__file__), 'data.parquet')
         if not os.path.exists(file_path):
-            return JSONResponse(status_code=500, content={"error": "no data source available", "detail": "MONGO_URI not set and data.parquet missing"})
+            msg = f"MONGO_URI not set and data.parquet missing at {file_path}"
+            logging.error(msg)
+            return JSONResponse(status_code=500, content={"error": "no data source available", "detail": msg})
 
         try:
             df = pd.read_parquet(file_path)
-        except Exception:
-            return JSONResponse(status_code=500, content={"error": "failed reading parquet"})
+        except Exception as e:
+            logging.exception('Failed reading parquet file')
+            return JSONResponse(status_code=500, content={"error": "failed reading parquet", "detail": str(e)})
 
         try:
             records = df.to_dict(orient='records')
             return records
-        except Exception:
-            return JSONResponse(status_code=500, content={"error": "failed serializing data"})
-    except Exception:
-        return JSONResponse(status_code=500, content={"error": "internal server error"})
+        except Exception as e:
+            logging.exception('Failed serializing parquet data')
+            return JSONResponse(status_code=500, content={"error": "failed serializing data", "detail": str(e)})
+    except Exception as e:
+        logging.exception('Unexpected error in /api/historical_daily_data')
+        tb = traceback.format_exc()
+        return JSONResponse(status_code=500, content={"error": "internal server error", "detail": str(e), "trace": tb})
 
 
 @app.get('/api/extra_series')
@@ -236,7 +231,7 @@ def extra_series():
         try:
             out = {
                 'onchain_mvrv': _read_series_from_db('onchain_data', 'mvrv'),
-                'etf_bitb': _read_series_from_db('ETF_flows', 'bitb'),
+                'etf_ibit': _read_series_from_db('ETF_flows', 'ibit'),
                 'fear_greed': _read_series_from_db('cryptofg', 'value'),
                 'bond_m2sl': _read_series_from_db('bond_yields', 'm2sl')
             }
@@ -289,7 +284,7 @@ def etf_flows():
     """Return ETF flows `bitb` series as list of {date,value}."""
     try:
         try:
-            arr = _read_series_from_db('ETF_flows', 'bitb')
+            arr = _read_series_from_db('ETF_flows', 'ibit')
             return arr
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
