@@ -184,8 +184,8 @@ def health():
             client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
             client.admin.command('ping')
             return {"status": "ok", "source": "mongodb"}
-        except Exception as e:
-            return JSONResponse(status_code=500, content={"status": "error", "source": "mongodb", "detail": str(e)})
+        except Exception:
+            return JSONResponse(status_code=500, content={"status": "error", "source": "mongodb"})
 
     # parquet fallback
     file_path = os.path.join(os.path.dirname(__file__), 'data.parquet')
@@ -212,8 +212,8 @@ def get_data():
                 cursor = coll.find().sort('date', 1)
                 docs = [_serialize_doc(d) for d in cursor]
                 return docs
-            except Exception as e:
-                return JSONResponse(status_code=500, content={"error": "mongodb read failed", "detail": str(e)})
+            except Exception:
+                return JSONResponse(status_code=500, content={"error": "mongodb read failed"})
 
         # Fallback to data.parquet
         file_path = os.path.join(os.path.dirname(__file__), 'data.parquet')
@@ -222,21 +222,21 @@ def get_data():
 
         try:
             df = pd.read_parquet(file_path)
-        except Exception as e:
-            return JSONResponse(status_code=500, content={"error": "failed reading parquet", "detail": str(e)})
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": "failed reading parquet"})
 
         try:
             records = df.to_dict(orient='records')
             return records
-        except Exception as e:
-            return JSONResponse(status_code=500, content={"error": "failed serializing data", "detail": str(e)})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": "internal server error", "detail": str(e)})
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": "failed serializing data"})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error": "internal server error"})
 
 
 @app.get('/api/extra_series')
 def extra_series():
-    """Return extra indicator series from other collections in the `coins` DB.
+    """Return extra indicator series from other collections in the `coins` DB."""
     try:
         try:
             out = {
@@ -248,8 +248,8 @@ def extra_series():
             return out
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
 
 
 @app.get('/proxy/historical_daily_data')
@@ -285,8 +285,8 @@ def onchain_data():
             return arr
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
 
 
 @app.get('/api/ETF_flows')
@@ -298,8 +298,8 @@ def etf_flows():
             return arr
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
 
 
 @app.get('/api/cryptofg')
@@ -311,8 +311,8 @@ def cryptofg():
             return arr
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
 
 
 @app.get('/api/bond_yields')
