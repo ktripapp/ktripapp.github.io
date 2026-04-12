@@ -203,7 +203,10 @@
         max-height: 420px;
       }
       #indicatorControls { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
-      #startDate, #endDate { width: 48%; }
+      /* Make date inputs stack on small screens for better touch targets */
+      .range-controls { flex-direction: column; align-items: stretch; }
+      .range-controls label { display: flex; flex-direction: column; align-items: stretch; gap:6px; }
+      #startDate, #endDate { width: 100%; }
       .preset, #applyRange, #resetRange { padding: 8px 10px; font-size: 0.95rem; }
       .game-card h3 { font-size: 0.95rem; }
     }
@@ -231,7 +234,7 @@
   </header>
 
   <main>
-    <div style="max-width:900px;margin:0 auto 18px;padding:12px 16px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.04);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;">
+    <div class="range-controls" style="max-width:900px;margin:0 auto 18px;padding:12px 16px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.04);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;">
       <label style="font-size:0.95rem;color:#374151;">기간: 
         <input id="startDate" type="date" style="margin:0 6px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
         ~
@@ -438,7 +441,28 @@
                     x: {
                       type: 'time',
                       time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
-                      ticks: { color: '#64748b', maxTicksLimit: 12 },
+                      ticks: {
+                        color: '#64748b',
+                        autoSkip: true,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        align: 'center',
+                        /* Reduce visible date labels on small/ narrow screens to avoid overlap. */
+                        callback: function(value, index, ticks){
+                          try{
+                            const total = (ticks && ticks.length) ? ticks.length : 0;
+                            const canvasEl = document.getElementById('historyChart');
+                            const canvasWidth = (canvasEl && canvasEl.clientWidth) ? canvasEl.clientWidth : 600;
+                            const approxLabelWidth = 80; // px per label to avoid overlap
+                            const maxLabels = Math.max(3, Math.floor(canvasWidth / approxLabelWidth));
+                            // always show first and last
+                            if(index === 0 || index === total - 1) return new Date(value).toISOString().slice(0,10);
+                            const step = Math.ceil(total / maxLabels);
+                            if(step <= 1 || index % step === 0) return new Date(value).toISOString().slice(0,10);
+                            return '';
+                          }catch(e){ return ''; }
+                        }
+                      },
                       grid: { color: 'rgba(0,0,0,0.04)' }
                     },
                     y: {
