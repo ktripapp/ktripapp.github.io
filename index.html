@@ -536,7 +536,10 @@
               const s = startInput.value; const e = endInput.value;
               if(!s || !e) return;
               const start = new Date(s + 'T00:00:00');
-              const end   = new Date(e + 'T23:59:59');
+              const requestedEnd = new Date(e + 'T23:59:59');
+              // clamp rendering end to last available data so chart shows no empty future area
+              const lastDataDate = (allItemsLocal && allItemsLocal.length) ? allItemsLocal[allItemsLocal.length-1].date : null;
+              const end = (lastDataDate && requestedEnd > lastDataDate) ? lastDataDate : requestedEnd;
               renderChartFor(allItemsLocal.filter(x => x.date >= start && x.date <= end));
               statusEl.textContent = '';
               reapplyCheckedIndicators();
@@ -547,11 +550,13 @@
             presets.forEach(p => p.addEventListener('click', ev => {
               const days = Number(ev.currentTarget.dataset.days);
               if(!allItemsLocal.length) return;
-              const last  = allItemsLocal[allItemsLocal.length-1].date;
-              const start = new Date(last);
+              // anchor presets to today for the UI, but rendering will be clamped to last data to avoid empty area
+              const today = new Date();
+              const endStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString().slice(0,10);
+              const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
               start.setDate(start.getDate() - days + 1);
               startInput.value = start.toISOString().slice(0,10);
-              endInput.value   = last.toISOString().slice(0,10);
+              endInput.value   = endStr; // always show today in the input
               applyRangeFromInputs();
             }));
 
