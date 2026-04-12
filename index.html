@@ -455,7 +455,11 @@
                           if(!r) return '';
                           const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
                           if(dsLabel && dsLabel.indexOf('MA') === 0){ return `${dsLabel}: ${fmt(r.y)}`; }
-                          if(r.y !== undefined && r.o === undefined) return `거래량: ${fmtVol(r.y)}`;
+                          if(r.y !== undefined && r.o === undefined) {
+                            const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
+                            if(dsLabel === '거래량') return `거래량: ${fmtVol(r.y)}`;
+                            return `${dsLabel}: ${fmt(r.y)}`;
+                          }
                           return [
                             `시가  : ${fmt(r.o)}`,
                             `고가  : ${fmt(r.h)}`,
