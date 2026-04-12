@@ -345,6 +345,16 @@
               return isNaN(t.getTime()) ? null : new Date(t.getFullYear(), t.getMonth(), t.getDate());
             }
 
+            function formatDateLocal(d){
+              if(!d) return '';
+              try{
+                const y = d.getFullYear();
+                const m = String(d.getMonth()+1).padStart(2,'0');
+                const day = String(d.getDate()).padStart(2,'0');
+                return `${y}-${m}-${day}`;
+              }catch(e){ return '' }
+            }
+
             const items = raw.map(d => {
               const dateStr = d.date || d.timestamp || d.time || (d._id && d._id.$date) || null;
               const date = parseDateLocal(dateStr);
@@ -378,7 +388,7 @@
 
               const candleData = itemsToRender.map(i => ({
                 x: i.date.getTime(), o: i.open, h: i.high, l: i.low, c: i.close,
-                _vol: i.volume, _dateStr: i.date.toISOString().slice(0,10)
+                _vol: i.volume, _dateStr: formatDateLocal(i.date)
               }));
               const volColors = itemsToRender.map(i => i.close >= i.open ? 'rgba(22,163,74,0.5)' : 'rgba(220,38,38,0.5)');
 
@@ -495,7 +505,7 @@
                         title: function(items){
                           if(!items || !items.length) return '';
                           const x = items[0].parsed && items[0].parsed.x !== undefined ? items[0].parsed.x : (items[0].raw && items[0].raw.x);
-                          try{ return new Date(Number(x)).toISOString().slice(0,10); }catch(e){ return ''; }
+                          try{ return formatDateLocal(new Date(Number(x))); }catch(e){ return ''; }
                         },
                         label: function(ctx){
                           const r = ctx.raw;
