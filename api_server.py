@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Header, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import requests
 import os
 import pandas as pd
 
@@ -104,6 +105,50 @@ app.add_middleware(
 )
 
 
+def _verify_request(request: Request):
+    """Simple verifier for requests coming from the GitHub Pages frontend.
+
+    - Checks referer/origin contains the configured host (default: ktripapp.github.io).
+    - Allows a development token via `PROXY_DEV_TOKEN` env var when provided
+      (send in header `X-Proxy-Token`) to enable curl/testing without a real referer.
+    This is intended as a lightweight protection (not perfect) while keeping
+    the Render API key secret on the server.
+    """
+    referer = request.headers.get('referer') or request.headers.get('origin')
+    allowed = os.environ.get('ALLOWED_REFERER_HOST', 'ktripapp.github.io')
+    dev_token = os.environ.get('PROXY_DEV_TOKEN')
+    client_token = request.headers.get('x-proxy-token')
+
+    # Allow when a dev token is configured and provided by the client
+    if dev_token and client_token and client_token == dev_token:
+        return
+
+    if not referer or allowed not in referer:
+        raise HTTPException(status_code=403, detail='forbidden: invalid referer')
+
+
+def _forward_to_render(path: str, timeout: int = 15):
+    """Internal helper: forward GET request to the configured Render base.
+
+    The server-side `RENDER_API_KEY` is injected into the forwarded request.
+    """
+    render_base = os.environ.get('RENDER_BASE', 'https://ktripapp-github-io.onrender.com')
+    render_key = os.environ.get('RENDER_API_KEY')
+    url = render_base.rstrip('/') + '/' + path.lstrip('/')
+    headers = {}
+    if render_key:
+        # add both common header forms to increase compatibility
+        headers['Authorization'] = f'Bearer {render_key}'
+        headers['X-API-Key'] = render_key
+    r = requests.get(url, headers=headers, timeout=timeout)
+    # try to propagate status and JSON content
+    try:
+        payload = r.json()
+    except Exception:
+        payload = r.text
+    return r.status_code, payload
+
+
 def _serialize_doc(doc: dict):
     # Remove `_id` and convert datetimes to ISO strings for JSON
     out = {}
@@ -205,6 +250,26 @@ def extra_series():
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+
+
+@app.get('/proxy/historical_daily_data')
+def proxy_historical(request: Request):
+    """Proxy endpoint that forwards to the Render API's `/api/historical_daily_data`.
+
+    This keeps `RENDER_API_KEY` on the server and only allows requests originating
+    from the configured referer host (or when a dev token is provided).
+    """
+    _verify_request(request)
+    status, payload = _forward_to_render('/api/historical_daily_data')
+    return JSONResponse(status_code=status, content=payload)
+
+
+@app.get('/proxy/extra_series')
+def proxy_extra_series(request: Request):
+    """Proxy endpoint that forwards to the Render API's `/api/extra_series`."""
+    _verify_request(request)
+    status, payload = _forward_to_render('/api/extra_series')
+    return JSONResponse(status_code=status, content=payload)
 
 
 @app.get('/api/onchain_data')
