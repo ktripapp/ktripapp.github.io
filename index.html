@@ -372,6 +372,10 @@
               // remember last data so we can recover if canvas is removed
               window._lastRenderData = itemsToRender;
 
+              // ensure x-axis limits match the currently rendered items (show only selected period)
+              const minMs = itemsToRender[0].date.getTime();
+              const maxMs = itemsToRender[itemsToRender.length-1].date.getTime();
+
               const candleData = itemsToRender.map(i => ({
                 x: i.date.getTime(), o: i.open, h: i.high, l: i.low, c: i.close,
                 _vol: i.volume, _dateStr: i.date.toISOString().slice(0,10)
@@ -449,27 +453,13 @@
                     x: {
                       type: 'time',
                       time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
+                      min: minMs,
+                      max: maxMs,
                       ticks: {
                         color: '#64748b',
                         autoSkip: true,
-                        maxRotation: 0,
-                        minRotation: 0,
-                        align: 'center',
-                        /* Reduce visible date labels on small/ narrow screens to avoid overlap. */
-                        callback: function(value, index, ticks){
-                          try{
-                            const total = (ticks && ticks.length) ? ticks.length : 0;
-                            const canvasEl = document.getElementById('historyChart');
-                            const canvasWidth = (canvasEl && canvasEl.clientWidth) ? canvasEl.clientWidth : 600;
-                            const approxLabelWidth = 80; // px per label to avoid overlap
-                            const maxLabels = Math.max(3, Math.floor(canvasWidth / approxLabelWidth));
-                            // always show first and last
-                            if(index === 0 || index === total - 1) return new Date(value).toISOString().slice(0,10);
-                            const step = Math.ceil(total / maxLabels);
-                            if(step <= 1 || index % step === 0) return new Date(value).toISOString().slice(0,10);
-                            return '';
-                          }catch(e){ return ''; }
-                        }
+                        maxTicksLimit: 12,
+                        source: 'data'
                       },
                       grid: { color: 'rgba(0,0,0,0.04)' }
                     },
@@ -592,12 +582,13 @@
               applyRangeFromInputs();
             }));
 
-            // 기본: 오늘 기준 한 달 (시작 = 오늘 - 1달, 끝 = 오늘)
+            // 기본: 오늘 기준 한 달 (시작 = 오늘 - 30일, 끝 = 오늘)
+            // Use day subtraction (30 days) instead of setMonth to avoid month-length rollover issues
             (function(){
               const today = new Date();
               const endLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
               const startLocal = new Date(endLocal);
-              startLocal.setMonth(startLocal.getMonth() - 1);
+              startLocal.setDate(startLocal.getDate() - 30 + 1); // include today as last day
               startInput.value = startLocal.toISOString().slice(0,10);
               endInput.value   = endLocal.toISOString().slice(0,10);
               applyRangeFromInputs();
