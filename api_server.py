@@ -116,13 +116,8 @@ def _verify_request(request: Request):
     """
     referer = request.headers.get('referer') or request.headers.get('origin')
     allowed = os.environ.get('ALLOWED_REFERER_HOST', 'ktripapp.github.io')
-    dev_token = os.environ.get('PROXY_DEV_TOKEN')
-    client_token = request.headers.get('x-proxy-token')
 
-    # Allow when a dev token is configured and provided by the client
-    if dev_token and client_token and client_token == dev_token:
-        return
-
+    # Require referer/origin to match expected host. Development bypass removed.
     if not referer or allowed not in referer:
         raise HTTPException(status_code=403, detail='forbidden: invalid referer')
 
@@ -260,16 +255,16 @@ def proxy_historical(request: Request):
     from the configured referer host (or when a dev token is provided).
     """
     _verify_request(request)
-    status, payload = _forward_to_render('/api/historical_daily_data')
-    return JSONResponse(status_code=status, content=payload)
+    # RENDER_API_KEY / remote forwarding is not used — always serve local data
+    return get_data()
 
 
 @app.get('/proxy/extra_series')
 def proxy_extra_series(request: Request):
     """Proxy endpoint that forwards to the Render API's `/api/extra_series`."""
     _verify_request(request)
-    status, payload = _forward_to_render('/api/extra_series')
-    return JSONResponse(status_code=status, content=payload)
+    # RENDER_API_KEY / remote forwarding is not used — always serve local data
+    return extra_series()
 
 
 @app.get('/api/onchain_data')
@@ -324,5 +319,5 @@ def bond_yields():
             return arr
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error":"mongodb read failed","detail":str(e)})
+    except Exception:
+        return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
