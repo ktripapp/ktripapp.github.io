@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import logging
 import traceback
+from urllib.parse import urlparse
 
 app = FastAPI()
 
@@ -63,7 +64,7 @@ def _read_series_from_db(coll_name, field_name):
     Raises ValueError if no Mongo configured.
     """
     db = getattr(app.state, 'mongo_db', None)
-    if not db:
+    if db is None:
         raise ValueError('no mongo')
     coll = db[coll_name]
     cursor = coll.find({}, {'_id': 0, 'date': 1, field_name: 1}).sort('date', 1)
@@ -90,16 +91,24 @@ def _read_series_from_db(coll_name, field_name):
 # ---- end helpers ----
 
 # CORS for local testing and deployed site
-origins = [
+DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://localhost:5000",
     "http://127.0.0.1:5000",
-    "https://ktripapp.github.io"
+    "https://ktripapp.github.io",
 ]
+
+# Allow overriding via environment variable (comma-separated)
+env_list = os.environ.get('ALLOWED_ORIGINS')
+if env_list:
+    allowed_origins = [s.strip() for s in env_list.split(',') if s.strip()]
+else:
+    allowed_origins = DEFAULT_ALLOWED_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
@@ -116,11 +125,18 @@ def _verify_request(request: Request):
     the Render API key secret on the server.
     """
     referer = request.headers.get('referer') or request.headers.get('origin')
-    allowed = os.environ.get('ALLOWED_REFERER_HOST', 'ktripapp.github.io')
+    if not referer:
+        raise HTTPException(status_code=403, detail='forbidden: missing referer/origin')
 
-    # Require referer/origin to match expected host. Development bypass removed.
-    if not referer or allowed not in referer:
-        raise HTTPException(status_code=403, detail='forbidden: invalid referer')
+    # Normalize to origin (scheme://host:port) and compare against allowed list
+    try:
+        p = urlparse(referer)
+        origin = f"{p.scheme}://{p.netloc}" if p.scheme and p.netloc else referer
+    except Exception:
+        origin = referer
+
+    if origin not in allowed_origins:
+        raise HTTPException(status_code=403, detail='forbidden: invalid origin')
 
 
 def _forward_to_render(path: str, timeout: int = 15):
@@ -178,7 +194,7 @@ def health():
 
 
 @app.get("/api/historical_daily_data")
-def get_data():
+def get_data(request: Request):
     """Return historical daily OHLCV records.
 
     Priority:
@@ -186,10 +202,20 @@ def get_data():
     2) Otherwise, fallback to reading `data.parquet` next to this file.
     Returns JSON array of documents or a JSON error with 500 status.
     """
+    # Verify origin
+    _verify_request(request)
+
     # Prefer shared MongoDB client initialized at startup
     try:
         db = getattr(app.state, 'mongo_db', None)
-        if db:
+        # Some pymongo Database objects raise NotImplementedError when truth-tested.
+        # Guard the truth-test and fall back to attempting to use the DB directly.
+        try:
+            has_db = (db is not None)
+        except NotImplementedError:
+            has_db = True
+
+        if has_db:
             try:
                 coll = db['historical_daily_data']
                 cursor = coll.find().sort('date', 1)
@@ -225,15 +251,74 @@ def get_data():
 
 
 @app.get('/api/extra_series')
-def extra_series():
+def extra_series(request: Request):
     """Return extra indicator series from other collections in the `coins` DB."""
+    _verify_request(request)
     try:
         try:
+            db = getattr(app.state, 'mongo_db', None)
+            if db is None:
+                raise ValueError('no mongo')
+
+            # onchain_mvrv: documents store different metrics in 'metric'/'value'
+            onchain = []
+            for d in db['onchain_data'].find({'metric': 'mvrv'}, {'_id': 0, 'date': 1, 'value': 1}).sort('date', 1):
+                date = d.get('date')
+                val = d.get('value')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                onchain.append({'date': ds, 'value': vv})
+
+            # ETF IBIT: field stored as 'IBIT' (uppercase) in ETF_flows
+            etf = []
+            for d in db['ETF_flows'].find({}, {'_id': 0, 'date': 1, 'IBIT': 1}).sort('date', 1):
+                date = d.get('date')
+                val = d.get('IBIT') if 'IBIT' in d else d.get('ibit')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                etf.append({'date': ds, 'value': vv})
+
+            # fear_greed: standard series
+            fg = _read_series_from_db('cryptofg', 'value')
+
+            # bond_m2sl: bond_yields uses 'observation_date' and 'M2SL'
+            bond = []
+            for d in db['bond_yields'].find({}, {'_id': 0, 'observation_date': 1, 'M2SL': 1}).sort('observation_date', 1):
+                date = d.get('observation_date') or d.get('date')
+                val = d.get('M2SL') if 'M2SL' in d else d.get('m2sl')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                bond.append({'date': ds, 'value': vv})
+
             out = {
-                'onchain_mvrv': _read_series_from_db('onchain_data', 'mvrv'),
-                'etf_ibit': _read_series_from_db('ETF_flows', 'ibit'),
-                'fear_greed': _read_series_from_db('cryptofg', 'value'),
-                'bond_m2sl': _read_series_from_db('bond_yields', 'm2sl')
+                'onchain_mvrv': onchain,
+                'etf_ibit': etf,
+                'fear_greed': fg,
+                'bond_m2sl': bond
             }
             return out
         except ValueError:
@@ -263,16 +348,34 @@ def proxy_extra_series(request: Request):
 
 
 @app.get('/api/onchain_data')
-def onchain_data():
+def onchain_data(request: Request):
     """Backward-compatible endpoint returning onchain `mvrv` series.
 
     Returns list of {date, value} similar to what `/api/extra_series` provides
     under `onchain_mvrv`.
     """
+    _verify_request(request)
     try:
         try:
-            arr = _read_series_from_db('onchain_data', 'mvrv')
-            return arr
+            db = getattr(app.state, 'mongo_db', None)
+            if db is None:
+                raise ValueError('no mongo')
+            out = []
+            for d in db['onchain_data'].find({'metric': 'mvrv'}, {'_id': 0, 'date': 1, 'value': 1}).sort('date', 1):
+                date = d.get('date')
+                val = d.get('value')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                out.append({'date': ds, 'value': vv})
+            return out
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
     except Exception:
@@ -280,12 +383,30 @@ def onchain_data():
 
 
 @app.get('/api/ETF_flows')
-def etf_flows():
+def etf_flows(request: Request):
     """Return ETF flows `bitb` series as list of {date,value}."""
+    _verify_request(request)
     try:
         try:
-            arr = _read_series_from_db('ETF_flows', 'ibit')
-            return arr
+            db = getattr(app.state, 'mongo_db', None)
+            if db is None:
+                raise ValueError('no mongo')
+            out = []
+            for d in db['ETF_flows'].find({}, {'_id': 0, 'date': 1, 'IBIT': 1}).sort('date', 1):
+                date = d.get('date')
+                val = d.get('IBIT') if 'IBIT' in d else d.get('ibit')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                out.append({'date': ds, 'value': vv})
+            return out
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
     except Exception:
@@ -293,8 +414,9 @@ def etf_flows():
 
 
 @app.get('/api/cryptofg')
-def cryptofg():
+def cryptofg(request: Request):
     """Return Fear/Greed `value` series as list of {date,value}."""
+    _verify_request(request)
     try:
         try:
             arr = _read_series_from_db('cryptofg', 'value')
@@ -306,13 +428,95 @@ def cryptofg():
 
 
 @app.get('/api/bond_yields')
-def bond_yields():
+def bond_yields(request: Request):
     """Return bond yields `m2sl` series as list of {date,value}."""
+    _verify_request(request)
     try:
         try:
-            arr = _read_series_from_db('bond_yields', 'm2sl')
-            return arr
+            db = getattr(app.state, 'mongo_db', None)
+            if db is None:
+                raise ValueError('no mongo')
+            out = []
+            for d in db['bond_yields'].find({}, {'_id': 0, 'observation_date': 1, 'M2SL': 1}).sort('observation_date', 1):
+                date = d.get('observation_date') or d.get('date')
+                val = d.get('M2SL') if 'M2SL' in d else d.get('m2sl')
+                if date is None or val is None:
+                    continue
+                try:
+                    ds = date.isoformat() if hasattr(date, 'isoformat') else str(date)
+                except Exception:
+                    ds = str(date)
+                try:
+                    vv = float(val)
+                except Exception:
+                    continue
+                out.append({'date': ds, 'value': vv})
+            return out
         except ValueError:
             return JSONResponse(status_code=500, content={"error": "MONGO_URI not configured"})
     except Exception:
         return JSONResponse(status_code=500, content={"error":"mongodb read failed"})
+
+
+@app.get('/api/yahoo_btc_latest')
+def yahoo_btc_latest(request: Request):
+    """Return the most recent daily OHLCV for BTC from Yahoo Finance.
+
+    This is intended as a lightweight live-check endpoint for the frontend.
+    It enforces the same referer/origin verification as other API endpoints.
+    """
+    _verify_request(request)
+    try:
+        try:
+            import yfinance as yf
+        except Exception:
+            return JSONResponse(status_code=500, content={"error": "yfinance not installed"})
+
+        ticker = yf.Ticker('BTC-USD')
+        # fetch last 7 days to be safe and take the last available day
+        df = ticker.history(period='7d', interval='1d')
+        if df is None or df.empty:
+            return JSONResponse(status_code=500, content={"error": "no data from yahoo"})
+
+        last = df.iloc[-1]
+        idx = df.index[-1]
+        # index may be pandas.Timestamp
+        try:
+            dt = idx.to_pydatetime()
+            date_iso = dt.date().isoformat()
+        except Exception:
+            date_iso = str(idx)
+
+        out = {
+            'date': date_iso,
+            'open': float(last['Open']),
+            'high': float(last['High']),
+            'low': float(last['Low']),
+            'close': float(last['Close']),
+            'volume': float(last.get('Volume', 0)) if 'Volume' in last.index else 0
+        }
+        return out
+    except Exception as e:
+        logging.exception('yahoo_btc_latest failed')
+        return JSONResponse(status_code=500, content={"error": "yahoo fetch failed", "detail": str(e)})
+
+
+@app.get('/_debug/series_counts')
+def _debug_series_counts(request: Request):
+    """Debug helper: return counts and last document date for indicator collections."""
+    _verify_request(request)
+    db = getattr(app.state, 'mongo_db', None)
+    if db is None:
+        return JSONResponse(status_code=500, content={"error": "no mongo"})
+    out = {}
+    for c in ['onchain_data','ETF_flows','bond_yields','cryptofg']:
+        if c in db.list_collection_names():
+            cnt = db[c].count_documents({})
+            last = None
+            cur = db[c].find().sort('date', -1).limit(1)
+            for d in cur:
+                last = d.get('date') or d.get('observation_date')
+            out[c] = {'count': cnt, 'last': (last.isoformat() if hasattr(last, 'isoformat') else str(last))}
+        else:
+            out[c] = {'count': 0, 'last': None}
+    return out
