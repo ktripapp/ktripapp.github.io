@@ -259,13 +259,12 @@
     <section id="chart-section" class="intro-section" style="margin-top:6px;">
       <p id="chart-desc" style="color:#6b7280;margin-bottom:10px;text-align:left;">데이터를 불러오는 중입니다...</p>
       <div style="background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06);overflow:hidden;">
-        <div class="chart-ohlc-bar" id="ohlcBar"></div>
         <div id="indicatorControls" style="padding:8px 12px;background:#fff;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <span style="font-weight:700;color:#64748b;">지표 표시:</span>
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_onchain_mvrv" style="margin-right:6px;">MVRV</label>
-          <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_etf_ibit" style="margin-right:6px;">ETF(ibit)</label>
+          <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_etf_ibit" style="margin-right:6px;">ETF(IBIT)</label>
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_fear_greed" style="margin-right:6px;">Fear/Greed</label>
-          <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_bond_m2sl" style="margin-right:6px;">M2 (m2sl)</label>
+          <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_bond_m2sl" style="margin-right:6px;">M2</label>
         </div>
         <div style="position:relative;">
           <canvas id="historyChart" style="width:100%;display:block;padding:8px;border-top:1px solid #f1f5f9;"></canvas>
@@ -296,17 +295,68 @@
         function fmt(n){ return (n == null || isNaN(n)) ? '-' : Number(n).toLocaleString('ko-KR', {maximumFractionDigits:6}); }
         function fmtVol(n){ return (n == null || isNaN(n)) ? '-' : Number(n).toLocaleString('ko-KR'); }
 
+        // Price axis (BTC) — compact with $ and K/M as needed
+        function fmtPriceAxis(n){
+          if(n == null || isNaN(n)) return '';
+          try{ return '$' + Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(n); }
+          catch(e){
+            const abs = Math.abs(n);
+            if(abs >= 1e6) return '$' + (n/1e3).toFixed(0) + 'K';
+            if(abs >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+            return '$' + Number(n).toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+          }
+        }
+
+        // Price formatting for tooltips / OHLC (keep slightly more precision)
+        function fmtPriceTooltip(n){
+          if(n == null || isNaN(n)) return '-';
+          try{ return '$' + Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(n); }
+          catch(e){
+            if(Math.abs(n) >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+            return '$' + Number(n).toLocaleString('ko-KR', { maximumFractionDigits: 2 });
+          }
+        }
+
+        // Volume compact formatter (no currency sign), prefer 1 decimal
+        function fmtVolCompact(n){
+          if(n == null || isNaN(n)) return '';
+          try{ return Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(n); }
+          catch(e){
+            const abs = Math.abs(n);
+            if(abs >= 1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'') + 'B';
+            if(abs >= 1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'') + 'M';
+            if(abs >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
+            return Number(n).toLocaleString('ko-KR');
+          }
+        }
+
+        // M2 formatter — express in trillions (T) with $ prefix
+        function fmtM2Axis(n){
+          if(n == null || isNaN(n)) return '';
+          const abs = Math.abs(n);
+          const sign = n < 0 ? '-' : '';
+          const trillions = n / 1e12;
+          if(Math.abs(trillions) >= 1){
+            return sign + '$' + Number(trillions).toFixed(trillions % 1 === 0 ? 0 : 1).replace(/\.0$/,'') + 'T';
+          }
+          // fallback to compact
+          try{ return sign + '$' + Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(n); }catch(e){ return sign + '$' + Number(n).toLocaleString('ko-KR'); }
+        }
+
+        // Generic compact axis formatter (fallback)
+        function fmtAxis(n){ if(n == null || isNaN(n)) return ''; try{ return Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(n); }catch(e){ return Number(n).toLocaleString('ko-KR'); } }
+
         function updateOhlcBar(d){
           if(!d){ ohlcBar.innerHTML = ''; return; }
           const isUp = d.c >= d.o;
           const closeColor = isUp ? '#16a34a' : '#dc2626';
           ohlcBar.innerHTML = `
             <span class="ohlc-date">${d.dateStr || ''}</span>
-            <span><span>시가</span><span class="ohlc-open">${fmt(d.o)}</span></span>
-            <span><span>고가</span><span class="ohlc-high">${fmt(d.h)}</span></span>
-            <span><span>저가</span><span class="ohlc-low">${fmt(d.l)}</span></span>
-            <span><span>종가</span><span style="color:${closeColor};font-weight:800;">${fmt(d.c)}</span></span>
-            <span><span>거래량</span><span class="ohlc-vol">${fmtVol(d.vol)}</span></span>`;
+            <span><span>시가</span><span class="ohlc-open">${fmtPriceTooltip(d.o)}</span></span>
+            <span><span>고가</span><span class="ohlc-high">${fmtPriceTooltip(d.h)}</span></span>
+            <span><span>저가</span><span class="ohlc-low">${fmtPriceTooltip(d.l)}</span></span>
+            <span><span>종가</span><span style="color:${closeColor};font-weight:800;">${fmtPriceTooltip(d.c)}</span></span>
+            <span><span>거래량</span><span class="ohlc-vol">${fmtVolCompact(d.vol)}</span></span>`;
         }
 
         // simple moving average helper: returns array aligned with input closes (null when not enough data)
@@ -416,6 +466,8 @@
               const ctxC = canvasC.getContext('2d');
 
               try{
+                // Adjust number of x-axis ticks on small screens for readability
+                const maxTicksLimitX = (window.innerWidth <= 700 || canvasC.clientWidth <= 420) ? 2 : 12;
                 if(window._candleChart){ try{ window._candleChart.destroy(); }catch(e){} }
                 window._candleChart = new Chart(ctxC, {
                 type: 'candlestick',
@@ -468,7 +520,7 @@
                       ticks: {
                         color: '#64748b',
                         autoSkip: true,
-                        maxTicksLimit: 12,
+                        maxTicksLimit: maxTicksLimitX,
                         source: 'data'
                       },
                       grid: { color: 'rgba(0,0,0,0.04)' }
@@ -476,13 +528,13 @@
                     y: {
                       position: 'right',
                       title: { display: true, text: '가격', color: '#64748b' },
-                      ticks: { color: '#64748b' },
+                      ticks: { color: '#64748b', callback: function(value){ return fmtPriceAxis(value); } },
                       grid: { color: 'rgba(0,0,0,0.05)' }
                     },
                     volume: {
                       position: 'left',
                       grid: { display: false },
-                      ticks: { color: '#94a3b8', maxTicksLimit: 3 },
+                      ticks: { color: '#94a3b8', maxTicksLimit: 3, callback: function(value){ return fmtVolCompact(value); } },
                       beginAtZero: true
                     }
                     ,
@@ -490,7 +542,7 @@
                       position: 'left',
                       offset: true,
                       grid: { display: false },
-                      ticks: { color: '#94a3b8' },
+                      ticks: { color: '#94a3b8', callback: function(value){ return fmtAxis(value); } },
                       display: true
                     }
                   },
@@ -511,17 +563,18 @@
                           const r = ctx.raw;
                           if(!r) return '';
                           const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
-                          if(dsLabel && dsLabel.indexOf('MA') === 0){ return `${dsLabel}: ${fmt(r.y)}`; }
+                          if(dsLabel && dsLabel.indexOf('MA') === 0){ return `${dsLabel}: ${fmtPriceTooltip(r.y)}`; }
                           if(r.y !== undefined && r.o === undefined) {
                             const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
-                            if(dsLabel === '거래량') return `거래량: ${fmtVol(r.y)}`;
-                            return `${dsLabel}: ${fmt(r.y)}`;
+                            if(dsLabel === '거래량') return `거래량: ${fmtVolCompact(r.y)}`;
+                            if(dsLabel && dsLabel.indexOf('M2') === 0) return `${dsLabel}: ${fmtM2Axis(r.y)}`;
+                            return `${dsLabel}: ${fmtAxis(r.y)}`;
                           }
                           return [
-                            `시가  : ${fmt(r.o)}`,
-                            `고가  : ${fmt(r.h)}`,
-                            `저가  : ${fmt(r.l)}`,
-                            `종가  : ${fmt(r.c)}`,
+                            `시가  : ${fmtPriceTooltip(r.o)}`,
+                            `고가  : ${fmtPriceTooltip(r.h)}`,
+                            `저가  : ${fmtPriceTooltip(r.l)}`,
+                            `종가  : ${fmtPriceTooltip(r.c)}`,
                           ];
                         }
                       }
@@ -655,6 +708,16 @@
                   } else {
                     chart.options.scales.indicator.ticks.maxTicksLimit = 5;
                   }
+                  // Adjust indicator tick formatter for M2 series specifically
+                  try{
+                    if(label && label.indexOf('M2') === 0){
+                      chart.options.scales.indicator.ticks.callback = function(v){ return fmtM2Axis(v); };
+                    } else if(label === 'Fear/Greed'){
+                      chart.options.scales.indicator.ticks.callback = function(v){ return String(v); };
+                    } else {
+                      chart.options.scales.indicator.ticks.callback = function(v){ return fmtAxis(v); };
+                    }
+                  }catch(e){ /* ignore */ }
                 } catch(e) {
                   console.warn('failed to set indicator ticks', e);
                 }
@@ -676,7 +739,15 @@
 
             function removeIndicatorDataset(chart, label){
               const idx = chart.data.datasets.findIndex(ds=> ds.label === label);
-              if(idx !== -1){ chart.data.datasets.splice(idx,1); chart.update(); }
+              if(idx !== -1){
+                chart.data.datasets.splice(idx,1);
+                // if no more indicator datasets, reset ticks callback to generic
+                const hasIndicator = chart.data.datasets.some(ds=> ds.yAxisID === 'indicator');
+                if(!hasIndicator){
+                  try{ chart.options.scales.indicator.ticks.callback = function(v){ return fmtAxis(v); }; }catch(e){}
+                }
+                chart.update();
+              }
             }
 
             (async ()=>{
