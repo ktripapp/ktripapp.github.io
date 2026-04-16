@@ -184,6 +184,22 @@
       max-height: 520px;
     }
 
+    /* DOM-based Chart tooltip (used by external tooltip handler) */
+    .chartjs-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15,23,42,0.92);
+      color: #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      line-height: 1.25rem;
+      transform: translate(-50%, -110%);
+      white-space: nowrap;
+      z-index: 50;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.4);
+    }
+
     /* Indicator controls responsive layout */
     #indicatorControls {
       padding: 8px 12px !important;
@@ -347,10 +363,12 @@
         function fmtAxis(n){ if(n == null || isNaN(n)) return ''; try{ return Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 2 }).format(n); }catch(e){ return Number(n).toLocaleString('ko-KR'); } }
 
         function updateOhlcBar(d){
-          if(!d){ ohlcBar.innerHTML = ''; return; }
+          const barEl = document.getElementById('ohlcBar');
+          if(!barEl) return; // container missing (might be removed/hidden)
+          if(!d){ barEl.innerHTML = ''; return; }
           const isUp = d.c >= d.o;
           const closeColor = isUp ? '#16a34a' : '#dc2626';
-          ohlcBar.innerHTML = `
+          barEl.innerHTML = `
             <span class="ohlc-date">${d.dateStr || ''}</span>
             <span><span>시가</span><span class="ohlc-open">${fmtPriceTooltip(d.o)}</span></span>
             <span><span>고가</span><span class="ohlc-high">${fmtPriceTooltip(d.h)}</span></span>
@@ -549,34 +567,43 @@
                   plugins: {
                     legend: { display: true, position: 'top', labels: { color: '#64748b', usePointStyle: true } },
                     tooltip: {
-                      backgroundColor: 'rgba(15,23,42,0.88)',
-                      titleColor: '#e2e8f0',
-                      bodyColor: '#e2e8f0',
-                      padding: 12,
-                      callbacks: {
-                        title: function(items){
-                          if(!items || !items.length) return '';
-                          const x = items[0].parsed && items[0].parsed.x !== undefined ? items[0].parsed.x : (items[0].raw && items[0].raw.x);
-                          try{ return formatDateLocal(new Date(Number(x))); }catch(e){ return ''; }
-                        },
-                        label: function(ctx){
-                          const r = ctx.raw;
-                          if(!r) return '';
-                          const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
-                          if(dsLabel && dsLabel.indexOf('MA') === 0){ return `${dsLabel}: ${fmtPriceTooltip(r.y)}`; }
-                          if(r.y !== undefined && r.o === undefined) {
-                            const dsLabel = (ctx.dataset && ctx.dataset.label) ? String(ctx.dataset.label) : '';
-                            if(dsLabel === '거래량') return `거래량: ${fmtVolCompact(r.y)}`;
-                            if(dsLabel && dsLabel.indexOf('M2') === 0) return `${dsLabel}: ${fmtM2Axis(r.y)}`;
-                            return `${dsLabel}: ${fmtAxis(r.y)}`;
+                      enabled: false,
+                      external: function(context){
+                        const tooltip = context.tooltip;
+                        const chart = context.chart;
+                        const container = chart.canvas.parentNode;
+                        let el = container.querySelector('.chartjs-tooltip');
+                        if(!el){ el = document.createElement('div'); el.className = 'chartjs-tooltip'; container.appendChild(el); }
+                        if(!tooltip || tooltip.opacity === 0){ el.style.display = 'none'; return; }
+                        // build content
+                        const title = tooltip.title || [];
+                        const bodyLines = [];
+                        (tooltip.dataPoints || []).forEach(dp => {
+                          const dsLabel = dp.dataset && dp.dataset.label ? String(dp.dataset.label) : '';
+                          if(dsLabel && dsLabel.indexOf('MA') === 0){
+                            const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
+                            bodyLines.push(`${dsLabel}: ${fmtPriceTooltip(v)}`);
+                          } else if(dp.raw && dp.raw.o !== undefined){
+                            bodyLines.push(`시가  : ${fmtPriceTooltip(dp.raw.o)}`);
+                            bodyLines.push(`고가  : ${fmtPriceTooltip(dp.raw.h)}`);
+                            bodyLines.push(`저가  : ${fmtPriceTooltip(dp.raw.l)}`);
+                            bodyLines.push(`종가  : ${fmtPriceTooltip(dp.raw.c)}`);
+                          } else {
+                            const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
+                            if(dsLabel === '거래량') bodyLines.push(`거래량: ${fmtVolCompact(v)}`);
+                            else if(dsLabel && dsLabel.indexOf('M2') === 0) bodyLines.push(`${dsLabel}: ${fmtM2Axis(v)}`);
+                            else bodyLines.push(`${dsLabel}: ${fmtAxis(v)}`);
                           }
-                          return [
-                            `시가  : ${fmtPriceTooltip(r.o)}`,
-                            `고가  : ${fmtPriceTooltip(r.h)}`,
-                            `저가  : ${fmtPriceTooltip(r.l)}`,
-                            `종가  : ${fmtPriceTooltip(r.c)}`,
-                          ];
-                        }
+                        });
+                        el.innerHTML = `<div style="font-weight:700;margin-bottom:4px">${title.join(' / ')}</div><div>${bodyLines.join('<br>')}</div>`;
+                        el.style.display = 'block'; el.style.opacity = 1;
+                        // position inside container using caret coordinates
+                        const chartRect = chart.canvas.getBoundingClientRect();
+                        // tooltip.caretX/Y are relative to chart area
+                        const left = (tooltip.caretX || 0);
+                        const top = (tooltip.caretY || 0);
+                        el.style.left = left + 'px';
+                        el.style.top = top + 'px';
                       }
                     }
                   }
@@ -605,9 +632,9 @@
             function reapplyCheckedIndicators(){
               const mapping = [
                 {cb:'cb_onchain_mvrv', label:'MVRV', key:'onchain_mvrv', color:'#7c3aed'},
-                {cb:'cb_etf_ibit', label:'ETF(ibit)', key:'etf_ibit', color:'#f59e0b'},
+                {cb:'cb_etf_ibit', label:'ETF(IBIT)', key:'etf_ibit', color:'#f59e0b'},
                 {cb:'cb_fear_greed', label:'Fear/Greed', key:'fear_greed', color:'#ef4444'},
-                {cb:'cb_bond_m2sl', label:'M2 (m2sl)', key:'bond_m2sl', color:'#06b6d4'}
+                {cb:'cb_bond_m2sl', label:'M2', key:'bond_m2sl', color:'#06b6d4'}
               ];
               const chart = window._candleChart;
               if(!chart) return;
@@ -754,9 +781,9 @@
               await fetchExtraSeries();
               const mapping = [
                 {cb:'cb_onchain_mvrv', label:'MVRV', key:'onchain_mvrv', color:'#7c3aed'},
-                {cb:'cb_etf_ibit', label:'ETF(ibit)', key:'etf_ibit', color:'#f59e0b'},
+                {cb:'cb_etf_ibit', label:'ETF(IBIT)', key:'etf_ibit', color:'#f59e0b'},
                 {cb:'cb_fear_greed', label:'Fear/Greed', key:'fear_greed', color:'#ef4444'},
-                {cb:'cb_bond_m2sl', label:'M2 (m2sl)', key:'bond_m2sl', color:'#06b6d4'}
+                {cb:'cb_bond_m2sl', label:'M2', key:'bond_m2sl', color:'#06b6d4'}
               ];
               mapping.forEach(m=>{
                 const el = document.getElementById(m.cb);
