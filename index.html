@@ -181,6 +181,9 @@
       height: auto !important;
       aspect-ratio: 4 / 3; /* shorter by default */
       max-height: 520px;
+      touch-action: none; /* enable pinch/drag handling by chart plugin */
+      -ms-touch-action: none;
+      -webkit-user-select: none;
     }
 
     /* DOM-based Chart tooltip (used by external tooltip handler) */
@@ -663,17 +666,31 @@
                   id: 'stockCrosshair',
                   _x: null, _y: null, _bound: false,
                   afterInit(chart){
-                    if(this._bound) return;
-                    this._bound = true;
-                    const onMove = (e)=>{
-                      const rect = chart.canvas.getBoundingClientRect();
-                      this._x = e.clientX - rect.left;
-                      this._y = e.clientY - rect.top;
-                      chart.render();
-                    };
-                    const onLeave = ()=>{ this._x = null; this._y = null; chart.render(); };
-                    chart.canvas.addEventListener('mousemove', onMove);
-                    chart.canvas.addEventListener('mouseleave', onLeave);
+                      if(this._bound) return;
+                      this._bound = true;
+                      const onMove = (e)=>{
+                        const rect = chart.canvas.getBoundingClientRect();
+                        this._x = e.clientX - rect.left;
+                        this._y = e.clientY - rect.top;
+                        chart.render();
+                      };
+                      const onLeave = ()=>{ this._x = null; this._y = null; chart.render(); };
+                      chart.canvas.addEventListener('mousemove', onMove);
+                      chart.canvas.addEventListener('mouseleave', onLeave);
+                      // touch support: map first touch to crosshair
+                      const onTouchMove = (ev)=>{
+                        try{
+                          const t = ev.touches && ev.touches[0]; if(!t) return;
+                          const rect = chart.canvas.getBoundingClientRect();
+                          this._x = t.clientX - rect.left;
+                          this._y = t.clientY - rect.top;
+                          chart.render();
+                          ev.preventDefault();
+                        }catch(e){}
+                      };
+                      const onTouchEnd = ()=>{ this._x = null; this._y = null; chart.render(); };
+                      chart.canvas.addEventListener('touchmove', onTouchMove, { passive:false });
+                      chart.canvas.addEventListener('touchend', onTouchEnd);
                   },
                   afterDraw(chart){
                     try{
@@ -817,6 +834,24 @@
                   try{ window._attachTradingToDatasets(chartDatasets); }catch(e){}
                 }
 
+                // make canvas explicitly touch-friendly
+                try{ canvasC.style.touchAction = 'none'; canvasC.setAttribute('touch-action','none'); }catch(e){}
+                const _isTouchDevice = (('ontouchstart' in window) || (navigator && navigator.maxTouchPoints && navigator.maxTouchPoints > 0));
+                const _zoomOptions = {
+                  pan: {
+                    enabled: true, mode: 'x', modifierKey: null, threshold: 3,
+                    onPanComplete: function({ chart }){ calcYRangeForView(chart); try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){} }
+                  },
+                  zoom: {
+                    wheel: { enabled: !_isTouchDevice, modifierKey: null, speed: 0.08 },
+                    pinch: { enabled: true },
+                    drag: { enabled: _isTouchDevice, backgroundColor: 'rgba(0,0,0,0.04)' },
+                    mode: 'x',
+                    onZoomComplete: function({ chart }){ calcYRangeForView(chart); try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){} }
+                  },
+                  limits: { x: { min: allMinMs, max: allMaxMs, minRange: 5 * 24 * 60 * 60 * 1000 } }
+                };
+
                 window._candleChart = new Chart(ctxC, {
                   type: 'candlestick',
                   // include zoom plugin at instance level if available to ensure pan/zoom works across environments
@@ -859,25 +894,7 @@
                       }
                     },
                     plugins: {
-                      zoom: {
-                        pan: {
-                          enabled: true, mode: 'x', modifierKey: null, threshold: 3,
-                          onPanComplete: function({ chart }){
-                            calcYRangeForView(chart);
-                            try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){}
-                          }
-                        },
-                        zoom: {
-                          wheel: { enabled: true, modifierKey: null, speed: 0.08 },
-                          pinch: { enabled: true },
-                          mode: 'x',
-                          onZoomComplete: function({ chart }){
-                            calcYRangeForView(chart);
-                            try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){}
-                          }
-                        },
-                        limits: { x: { min: allMinMs, max: allMaxMs, minRange: 5 * 24 * 60 * 60 * 1000 } }
-                      },
+                      zoom: _zoomOptions,
                       legend: { display: true, position: 'top', labels: { color: '#64748b', usePointStyle: true } },
                       tooltip: {
                         enabled: false,
