@@ -312,17 +312,10 @@
     </section>
 
     <!-- Local Chart.js + plugins (served from vendor to avoid CDN blocking) -->
-    <script src="vendor/chart.min.js"></script>
-    <!-- Financial candlestick plugin -->
-    <script src="vendor/chartjs-chart-financial.min.js"></script>
-    <!-- Date adapter -->
-    <script src="vendor/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- Zoom & Pan plugin (local) -->
-    <script src="vendor/chartjs-plugin-zoom.min.js"></script>
+    <!-- Chart.js and plugins will be loaded from CDN (vendor/ not used on Pages) -->
     <!-- CDN fallback: if vendor files are 404 on GitHub Pages, dynamically load from CDN -->
     <script>
       (function(){
-        function start(){
         function loadScript(src, cb){
           var s = document.createElement('script'); s.src = src; s.async = false;
           s.onload = function(){ cb && cb(null); };
@@ -331,12 +324,12 @@
         }
         function ensureChartAndPlugins(){
           return new Promise(function(resolve){
-            var maxWait = Date.now() + 15000; // 15s timeout
+            var maxWait = Date.now() + 10000; // 10s timeout
             function isCandlestickRegistered(){
               try{
                 if(!window.Chart) return false;
                 if(window.Chart.registry && typeof window.Chart.registry.getController === 'function'){
-                  if(window.Chart.registry.getController('candlestick')) return true;
+                  try{ if(window.Chart.registry.getController('candlestick')) return true; }catch(e){}
                 }
                 if(window.Chart.controllers){
                   return Object.keys(window.Chart.controllers).some(k=> String(k).toLowerCase().indexOf('candlestick') !== -1);
@@ -345,37 +338,46 @@
               return false;
             }
 
-            function tryResolve(){
-              if(isCandlestickRegistered()) return resolve();
-              if(Date.now() > maxWait) return resolve(); // give up after timeout
-              setTimeout(checkAndLoad, 120);
+            function startPolling(){
+              (function poll(){
+                if(isCandlestickRegistered()) return resolve();
+                if(Date.now() > maxWait) return resolve();
+                setTimeout(poll, 150);
+              })();
             }
 
-            function checkAndLoad(){
-              if(!window.Chart){
-                loadScript('https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', function(err){
-                  if(window.Chart) return checkAndLoad();
-                  loadScript('https://unpkg.com/chart.js@3.9.1/dist/chart.min.js', function(){ checkAndLoad(); });
-                });
-                return;
-              }
-              // load financial plugin then wait for registration
-              if(!isCandlestickRegistered()){
-                loadScript('https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js', function(){
-                  // also load adapter and zoom (non-blocking)
-                  loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js');
-                  loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js');
-                  setTimeout(tryResolve, 80);
-                });
-                return;
-              }
-              tryResolve();
+            // if Chart is missing, try loading local vendor files first, then CDN fallback
+            if(typeof window.Chart === 'undefined'){
+              // try local vendor first
+              loadScript('/vendor/chart.min.js', function(err){
+                if(err){
+                  // local vendor missing, try CDN
+                  loadScript('https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', function(err2){
+                    if(err2){ try{ loadScript('https://unpkg.com/chart.js@3.9.1/dist/chart.min.js', startPolling); }catch(e){ startPolling(); } }
+                    else startPolling();
+                  });
+                }else{
+                  // loaded local Chart, now load plugins (local first)
+                  loadScript('/vendor/chartjs-chart-financial.min.js', function(){
+                    loadScript('/vendor/chartjs-adapter-date-fns.bundle.min.js', function(){
+                      loadScript('/vendor/chartjs-plugin-zoom.min.js', function(){ startPolling(); });
+                    });
+                  });
+                }
+              });
+              return;
             }
 
-            checkAndLoad();
+            // Chart exists; start polling for candlestick controller
+            startPolling();
           });
         }
-        ensureChartAndPlugins().catch(function(){}).then(function(){ /* continue regardless */ });
+        // expose loader so other scripts can await plugin readiness
+        window.ensureChartAndPlugins = ensureChartAndPlugins;
+        ensureChartAndPlugins().then(function(){
+          try{ /* proceed to initialize chart once plugins are available */ }
+          catch(e){}
+        }).catch(function(){});
       })();
     </script>
     <script>
@@ -529,6 +531,19 @@
             const allItemsLocal = items;
 
             function renderChartFor(itemsToRender){
+              // Ensure Chart.js is loaded before attempting to render.
+              if(typeof Chart === 'undefined'){
+                try{
+                  console.warn('Chart not ready, deferring renderChartFor');
+                  if(window.ensureChartAndPlugins && typeof window.ensureChartAndPlugins === 'function'){
+                    window.ensureChartAndPlugins().then(function(){ setTimeout(function(){ renderChartFor(itemsToRender); }, 50); }).catch(function(){ setTimeout(function(){ renderChartFor(itemsToRender); }, 200); });
+                    return;
+                  }
+                }catch(e){}
+                // fallback retry
+                setTimeout(function(){ renderChartFor(itemsToRender); }, 200);
+                return;
+              }
               if(!itemsToRender || itemsToRender.length === 0){
                 statusEl.textContent = '선택한 기간의 데이터가 없습니다.';
                 if(window._candleChart)  { try{ window._candleChart.destroy();  }catch(e){} window._candleChart  = null; }
@@ -1489,9 +1504,9 @@
           updateTradingPanel();
         })();
 
-            loadChartData();
-            }
-            if(window.Chart) start(); else { var _t = setInterval(function(){ if(window.Chart){ clearInterval(_t); start(); } }, 100); }
+            if(window.ensureChartAndPlugins){
+              window.ensureChartAndPlugins().then(function(){ try{ loadChartData(); }catch(e){ console.warn(e); } }).catch(function(){ try{ loadChartData(); }catch(e){} });
+            } else { try{ loadChartData(); }catch(e){ console.warn(e); } }
           })();
     </script>
 
