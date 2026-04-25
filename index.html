@@ -319,6 +319,40 @@
     <script src="vendor/chartjs-adapter-date-fns.bundle.min.js"></script>
     <!-- Zoom & Pan plugin (local) -->
     <script src="vendor/chartjs-plugin-zoom.min.js"></script>
+    <!-- CDN fallback: if vendor files are 404 on GitHub Pages, dynamically load from CDN -->
+    <script>
+      (function(){
+        function loadScript(src, cb){
+          var s = document.createElement('script'); s.src = src; s.async = false;
+          s.onload = function(){ cb && cb(null); };
+          s.onerror = function(){ cb && cb(new Error('load failed')); };
+          document.head.appendChild(s);
+        }
+        function ensureChartAndPlugins(){
+          if(window.Chart) return Promise.resolve();
+          return new Promise(function(resolve){
+            // try popular CDN for Chart.js v3
+            loadScript('https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', function(err){
+              if(!err && window.Chart) return resolve();
+              // final attempt (unpkg)
+              loadScript('https://unpkg.com/chart.js@3.9.1/dist/chart.min.js', function(){ resolve(); });
+            });
+          });
+        }
+        ensureChartAndPlugins().then(function(){
+          // load plugins only if they are not already available
+          if(!window.ChartFinancial){
+            loadScript('https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js');
+          }
+          if(!window.dateFnsAdapter && !window.chartjsAdapterDateFns){
+            loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js');
+          }
+          if(!window.chartjsPluginZoom){
+            loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js');
+          }
+        }).catch(function(){ /* ignore */ });
+      })();
+    </script>
     <script>
       (function(){
         const API_PROD = 'https://ktripapp-github-io.onrender.com';
