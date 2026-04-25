@@ -6,6 +6,7 @@
   <meta name="google-adsense-account" content="ca-pub-8900421212808751">
   <meta name="description" content="Godsaeng — 숫자 게임, 퀴즈, 오목 빙고, MBTI 테스트까지 다양한 웹 미니 게임을 한 곳에서 즐기세요." />
   <title>케이트립 갓생 플랫폼</title>
+  <link rel="icon" href="image/Cat.png" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751" crossorigin="anonymous"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,7 +18,7 @@
     /* HEADER */
     header {
       background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
-      padding: 48px 20px 40px;
+      padding: 20px 20px 20px;
       color: #fff;
       text-align: center;
     }
@@ -32,12 +33,10 @@
     header h1 { font-size: 2.1rem; letter-spacing: 0.3px; }
     header p { margin: 10px 0 0; opacity: 0.92; max-width: 700px; line-height: 1.65; }
 
-                    },
-                    ...maDatasets,
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 36px 20px 0;
+      padding: 10px 20px 0;
     }
 
     /* INTRO */
@@ -194,7 +193,7 @@
       border-radius: 6px;
       font-size: 0.85rem;
       line-height: 1.25rem;
-      transform: translate(-50%, -110%);
+      transform: none; /* position directly at computed coords */
       white-space: nowrap;
       z-index: 50;
       box-shadow: 0 6px 18px rgba(2,6,23,0.4);
@@ -227,8 +226,8 @@
       /* Keep presets in a single horizontal row on mobile */
       .controls-actions { width: 100%; display: flex; justify-content: center; }
       .presets-row { display:flex; gap:8px; justify-content:center; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      .presets-row .preset, .presets-row #resetRange { flex: 0 0 auto; white-space:nowrap; }
-      .preset, #applyRange, #resetRange { padding: 8px 10px; font-size: 0.95rem; }
+      .presets-row .preset { flex: 0 0 auto; white-space:nowrap; }
+      .preset, #applyRange { padding: 8px 10px; font-size: 0.95rem; }
       .game-card h3 { font-size: 0.95rem; }
     }
     /* volumeChart removed: volume is now drawn on the main historyChart canvas */
@@ -255,7 +254,7 @@
   </header>
 
   <main>
-    <div class="range-controls" style="max-width:900px;margin:0 auto 18px;padding:12px 16px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.04);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;">
+    <div class="range-controls" style="max-width:900px;margin:0 auto 1px;padding:12px 1px;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(15,23,42,0.04);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center;">
       <label style="font-size:0.95rem;color:#374151;"> 
         <input id="startDate" type="date" style="margin:0 6px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
         <input id="endDate" type="date" style="margin:0 6px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
@@ -266,7 +265,7 @@
             <button class="preset" data-days="30" style="padding:6px 8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">1M</button>
             <button class="preset" data-days="90" style="padding:6px 8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">3M</button>
             <button class="preset" data-days="365" style="padding:6px 8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">1Y</button>
-            <button id="resetRange" style="padding:6px 8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">전체</button>
+            <button id="resetRange" class="preset" style="padding:6px 8px;border-radius:8px;border:1px solid #e5e7eb;background:#fff;">전체</button>
           </div>
         </div>
     </div>
@@ -282,19 +281,44 @@
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_fear_greed" style="margin-right:6px;">Fear/Greed</label>
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_bond_m2sl" style="margin-right:6px;">M2</label>
         </div>
-        <div style="position:relative;">
-          <canvas id="historyChart" style="width:100%;display:block;padding:8px;border-top:1px solid #f1f5f9;"></canvas>
+          <canvas id="historyChart" style="width:100%;display:block;"></canvas>
+        </div>
+
+        <!-- Trading controls: 주문 입력 / 오더북 / 포지션 -->
+        <div id="tradingControls" style="display:flex;gap:12px;align-items:center;padding:12px;border-top:1px dashed #eef2f7;background:#fcfcff;flex-wrap:wrap;">
+          <div id="tradingNotice" style="width:100%;text-align:center;padding:8px 12px;border-radius:8px;background:#fff7ed;color:#92400e;border:1px solid #fcd34d;margin-bottom:6px;font-weight:700;">
+            안내: 보안으로 인해 현재는 차트 분석만 지원하고, 아래 BUY/SELL은 재미 용도입니다.
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label style="font-weight:700;color:#374151">수량</label>
+            <input id="tradeQty" type="number" min="0.0001" step="0.0001" value="0.001" style="width:110px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
+            <label style="font-weight:700;color:#374151">가격(지정가)</label>
+            <input id="tradePrice" type="number" step="0.01" placeholder="지정가 (빈값=시장가)" style="width:160px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="btnMarketBuy" style="background:#16a34a;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Buy</button>
+            <button id="btnMarketSell" style="background:#dc2626;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Sell</button>
+            <button id="btnLimitBuy" style="background:#34d399;color:#072;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Buy</button>
+            <button id="btnLimitSell" style="background:#fb7185;color:#700;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Sell</button>
+          </div>
+          <div id="tradingPanel" style="margin-left:auto;min-width:260px;max-width:42%;background:#fff;border-radius:8px;padding:10px;border:1px solid #f1f5f9;">
+            <div style="font-weight:800;margin-bottom:8px;color:#374151">오더북 / 포지션</div>
+            <div id="ordersList" style="font-size:0.92rem;color:#374151;max-height:140px;overflow:auto;">(주문 없음)</div>
+            <div id="positionsSummary" style="margin-top:8px;font-size:0.92rem;color:#374151;">(포지션 없음)</div>
+          </div>
         </div>
         <!-- indicatorContainer removed: indicators are now overlaid directly on the main candlestick chart -->
       </div>
     </section>
 
-    <!-- Chart.js v3 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Local Chart.js + plugins (served from vendor to avoid CDN blocking) -->
+    <script src="vendor/chart.min.js"></script>
     <!-- Financial candlestick plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.0/dist/chartjs-chart-financial.min.js"></script>
+    <script src="vendor/chartjs-chart-financial.min.js"></script>
     <!-- Date adapter -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="vendor/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Zoom & Pan plugin (local) -->
+    <script src="vendor/chartjs-plugin-zoom.min.js"></script>
     <script>
       (function(){
         const API_PROD = 'https://ktripapp-github-io.onrender.com';
@@ -303,6 +327,11 @@
         const endpoint = `${base}/api/historical_daily_data`;
         const statusEl = document.getElementById('chart-desc');
         const ohlcBar  = document.getElementById('ohlcBar');
+        const startInput = document.getElementById('startDate');
+        const endInput   = document.getElementById('endDate');
+        const applyBtn   = document.getElementById('applyRange');
+        // exclude the reset button (if present) from preset buttons to avoid conflicting handlers
+        const presets    = Array.from(document.querySelectorAll('.preset')).filter(el => el.id !== 'resetRange');
 
         // 캔들스틱 색상 (상승=초록, 하락=빨강)
         const COLOR_UP   = '#16a34a';
@@ -447,168 +476,535 @@
                 return;
               }
 
-              // remember last data so we can recover if canvas is removed
+              // (previous cleanup handled above)
+
               window._lastRenderData = itemsToRender;
 
-              // ensure x-axis limits match the currently rendered items (show only selected period)
-              const minMs = itemsToRender[0].date.getTime();
-              const maxMs = itemsToRender[itemsToRender.length-1].date.getTime();
+              // 초기 뷰: 선택 기간
+              const minMs    = itemsToRender[0].date.getTime();
+              const maxMs    = itemsToRender[itemsToRender.length-1].date.getTime();
+              // 전체 데이터 범위 (pan/zoom 한계)
+              const allMinMs = allItemsLocal[0].date.getTime();
+              const allMaxMs = allItemsLocal[allItemsLocal.length-1].date.getTime();
 
-              const candleData = itemsToRender.map(i => ({
+              // 전체 데이터를 차트에 넣어야 pan/zoom 시 밖으로 나갈 수 있음
+              const renderItems = allItemsLocal;
+
+              const candleData = renderItems.map(i => ({
                 x: i.date.getTime(), o: i.open, h: i.high, l: i.low, c: i.close,
                 _vol: i.volume, _dateStr: formatDateLocal(i.date)
               }));
-              const volColors = itemsToRender.map(i => i.close >= i.open ? 'rgba(22,163,74,0.5)' : 'rgba(220,38,38,0.5)');
+              const volColors = renderItems.map(i => i.close >= i.open ? 'rgba(22,163,74,0.5)' : 'rgba(220,38,38,0.5)');
 
-              // prepare moving averages
-              const closes = itemsToRender.map(i => i.close);
+              const closes = renderItems.map(i => i.close);
               const maPeriods = [5,20,60,120,200,365];
               const maColors = {5:'#ff9900',20:'#4f46e5',60:'#10b981',120:'#ef4444',200:'#06b6d4',365:'#64748b'};
               const maArrays = {};
               maPeriods.forEach(p=> maArrays[p] = computeSMA(closes, p));
               const maDatasets = maPeriods.map(p => ({
-                type: 'line',
-                label: 'MA' + p,
-                data: itemsToRender.map((it, idx) => ({ x: it.date.getTime(), y: maArrays[p][idx] })),
-                borderColor: maColors[p],
-                borderWidth: 1.2,
-                pointRadius: 0,
-                spanGaps: true,
-                yAxisID: 'y',
-                order: 1
+                type: 'line', label: 'MA' + p,
+                data: renderItems.map((it, idx) => ({ x: it.date.getTime(), y: maArrays[p][idx] })),
+                borderColor: maColors[p], borderWidth: 1.2, pointRadius: 0,
+                spanGaps: true, yAxisID: 'y', order: 1
               }));
 
-              // ── 캔들 차트 ── (reuse existing canvas to avoid DOM flicker)
               const canvasC = document.getElementById('historyChart');
               if(!canvasC){ statusEl.textContent = '차트 요소를 찾을 수 없습니다.'; return; }
               const ctxC = canvasC.getContext('2d');
 
+              // track latest mouse position over chart canvas for robust tooltip placement
               try{
-                // Adjust number of x-axis ticks on small screens for readability
+                if(!canvasC._mouseTracker){
+                  canvasC._mouseTracker = true;
+                  canvasC.addEventListener('mousemove', e=>{ window._lastChartMouse = { x: e.clientX, y: e.clientY }; });
+                }
+              }catch(e){}
+
+              // 휠 스크롤 막기 (한 번만 등록)
+              if(!canvasC._wheelBlocked){
+                canvasC._wheelBlocked = true;
+                try{ canvasC.parentNode.addEventListener('wheel', e=> e.preventDefault(), { passive:false }); }catch(e){}
+              }
+              // detect and register zoom plugin early, and keep reference for instance-level inclusion
+              let zoomPlugin = null;
+              try{
+                zoomPlugin = window.ChartZoom || window.chartjsPluginZoom || window['chartjs-plugin-zoom'] || window['chartjsPluginZoom'] || null;
+                if(zoomPlugin && Chart && Chart.register){
+                  try{ Chart.register(zoomPlugin); }catch(e){ /* already registered or incompatible */ }
+                }
+              }catch(e){ zoomPlugin = null; }
+
+              // Y축 범위를 현재 뷰포트(xMin~xMax)에 맞춰 동적으로 재계산
+              function calcYRangeForView(chart){
+                try{
+                  if(chart.$updatingYRange) return;
+                  chart.$updatingYRange = true;
+
+                  const xAxis = chart.scales.x;
+                  const xMin = xAxis.min, xMax = xAxis.max;
+                  let lo = Infinity, hi = -Infinity;
+                  let visible = 0;
+
+                  for(const i of renderItems){
+                    const t = i.date.getTime();
+                    if(t < xMin || t > xMax) continue;
+
+                    visible++;
+
+                    if(i.low  < lo) lo = i.low;
+                    if(i.high > hi) hi = i.high;
+                  }
+
+                  if(!isFinite(lo) || !isFinite(hi)){
+                    chart.$updatingYRange = false;
+                    return;
+                  }
+
+                  let range = hi - lo;
+                  if(range === 0) range = Math.abs(lo) * 0.01 || 1; // 최소 1% (fallback 1)
+                  const pad = range * 0.06;
+                  chart.options.scales.y.min = lo - pad;
+                  chart.options.scales.y.max = hi + pad;
+
+                  // dynamically adjust candlestick thickness based on visible candle count
+                  // → 실제 캔들 그리기는 customCandlePlugin의 afterDatasetsDraw에서 처리하므로
+                  //   여기서는 Y축 범위 재계산만 수행하고 barThickness 조작은 생략.
+                  try{
+                    // (no-op: thickness is handled by customCandlePlugin)
+                  }catch(e){ /* ignore */ }
+
+                  chart.update('none');
+                  chart.$updatingYRange = false;
+                }catch(e){
+                  try{ chart.$updatingYRange = false; }catch(_){}
+                }
+              }
+
+              try{
                 const maxTicksLimitX = (window.innerWidth <= 700 || canvasC.clientWidth <= 420) ? 2 : 12;
                 if(window._candleChart){ try{ window._candleChart.destroy(); }catch(e){} }
+
+                // 크로스헤어 플러그인 (인스턴스별로 생성)
+                const crosshairPlugin = {
+                  id: 'stockCrosshair',
+                  _x: null, _y: null, _bound: false,
+                  afterInit(chart){
+                    if(this._bound) return;
+                    this._bound = true;
+                    const onMove = (e)=>{
+                      const rect = chart.canvas.getBoundingClientRect();
+                      this._x = e.clientX - rect.left;
+                      this._y = e.clientY - rect.top;
+                      chart.render();
+                    };
+                    const onLeave = ()=>{ this._x = null; this._y = null; chart.render(); };
+                    chart.canvas.addEventListener('mousemove', onMove);
+                    chart.canvas.addEventListener('mouseleave', onLeave);
+                  },
+                  afterDraw(chart){
+                    if(this._x == null) return;
+                    const { ctx, chartArea: a } = chart;
+                    if(this._x < a.left || this._x > a.right || this._y < a.top || this._y > a.bottom) return;
+                    ctx.save();
+                    ctx.setLineDash([3, 3]);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = 'rgba(100,116,139,0.5)';
+                    ctx.beginPath(); ctx.moveTo(this._x, a.top);   ctx.lineTo(this._x, a.bottom); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(a.left, this._y);  ctx.lineTo(a.right,  this._y); ctx.stroke();
+                    ctx.restore();
+                  }
+                };
+
+                // ── 커스텀 캔들 렌더링 플러그인 ─────────────────────────────────
+                // chartjs-chart-financial의 barThickness가 time 축에서 무시되는 문제를
+                // 해결하기 위해 afterDatasetsDraw 훅에서 Canvas에 직접 캔들을 그림.
+                // OHLC 데이터셋은 축·툴팁 등록용으로만 남기고 실제 그리기는 여기서 담당.
+                const customCandlePlugin = {
+                  id: 'customCandle',
+                  afterDatasetsDraw(chart) {
+                    try {
+                      const ds = chart.data.datasets.find(d => d.label === 'OHLC');
+                      if (!ds || !ds.data || !ds.data.length) return;
+                      const xScale = chart.scales.x;
+                      const yScale = chart.scales.y;
+                      if (!xScale || !yScale) return;
+
+                      const { ctx, chartArea } = chart;
+                      const xMin = xScale.min, xMax = xScale.max;
+
+                      // ── 뷰포트 내 캔들만 추출 (앞뒤 1개씩 여유 포함해 간격 계산에 활용) ──
+                      const allData = ds.data;
+                      const visibleIdxs = [];
+                      allData.forEach((d, i) => { if (d.x >= xMin && d.x <= xMax) visibleIdxs.push(i); });
+                      if (!visibleIdxs.length) return;
+
+                      // ── 캔들 너비: 인접 캔들의 실제 픽셀 거리 중앙값으로 계산 ──
+                      // pxPerCandle을 단순 '폭/개수'로 구하면 주말 갭 등에서 들쭉날쭉해짐.
+                      // 대신 인접 캔들 px 거리의 중앙값을 사용해 균일한 너비를 보장.
+                      const gaps = [];
+                      for (let k = 1; k < visibleIdxs.length; k++) {
+                        const pxA = xScale.getPixelForValue(allData[visibleIdxs[k-1]].x);
+                        const pxB = xScale.getPixelForValue(allData[visibleIdxs[k]].x);
+                        const diff = Math.abs(pxB - pxA);
+                        if (diff > 0) gaps.push(diff);
+                      }
+                      // 캔들이 1개뿐이면 차트 폭 기반으로 fallback
+                      let medianGap;
+                      if (gaps.length === 0) {
+                        medianGap = Math.max(1, chartArea.right - chartArea.left);
+                      } else {
+                        gaps.sort((a, b) => a - b);
+                        medianGap = gaps[Math.floor(gaps.length / 2)];
+                      }
+                      // 바디 너비: 중앙값 간격의 70%, 최솟값 2px, 최댓값 80px
+                      const bodyW = Math.max(2, Math.min(80, medianGap * 0.70));
+
+                      // ── 심지 굵기: 바디와 독립된 구간별 고정값 ──
+                      let wickW;
+                      if      (bodyW <=  4) wickW = 1;
+                      else if (bodyW <= 10) wickW = 1.5;
+                      else if (bodyW <= 20) wickW = 2;
+                      else if (bodyW <= 40) wickW = 2.5;
+                      else                  wickW = 3;
+
+                      // 상승 캔들 테두리 굵기: 바디 크기에 따라 1.5~2.5px 고정
+                      const borderW = bodyW <= 10 ? 1.5 : bodyW <= 30 ? 2 : 2.5;
+
+                      ctx.save();
+                      // chartArea 안으로 클리핑 (바디가 영역 밖으로 삐져나오지 않도록)
+                      ctx.beginPath();
+                      ctx.rect(chartArea.left, chartArea.top,
+                               chartArea.right - chartArea.left,
+                               chartArea.bottom - chartArea.top);
+                      ctx.clip();
+
+                      visibleIdxs.forEach(i => {
+                        const d = allData[i];
+                        // 픽셀 정수화: 서브픽셀 렌더링으로 심지가 흔들리는 것을 방지
+                        const cx  = Math.round(xScale.getPixelForValue(d.x));
+                        const yO  = yScale.getPixelForValue(d.o);
+                        const yC  = yScale.getPixelForValue(d.c);
+                        const yH  = yScale.getPixelForValue(d.h);
+                        const yL  = yScale.getPixelForValue(d.l);
+                        const isUp = d.c >= d.o;
+                        const color = isUp ? COLOR_UP : COLOR_DOWN;
+
+                        // 바디 상단/하단 계산
+                        const bodyTop    = Math.min(yO, yC);
+                        const bodyBottom = Math.max(yO, yC);
+                        const bodyHeight = Math.max(1.5, bodyBottom - bodyTop);
+                        const x0 = cx - bodyW / 2;
+
+                        // 1) 심지 (고가~저가 세로선) — 바디보다 먼저 그려야 바디가 위로 올라옴
+                        ctx.beginPath();
+                        ctx.lineWidth   = wickW;
+                        ctx.strokeStyle = color;
+                        // cx + 0.5 오프셋: Canvas 정수 좌표에서 선이 2px로 번지는 현상 방지
+                        ctx.moveTo(cx + 0.5, yH);
+                        ctx.lineTo(cx + 0.5, yL);
+                        ctx.stroke();
+
+                        // 2) 바디
+                        // 상승(양봉)/하락(음봉) 모두 해당 색상으로 바디를 채움
+                        ctx.fillStyle = color;
+                        ctx.fillRect(x0, bodyTop, bodyW, bodyHeight);
+                      });
+
+                      ctx.restore();
+                    } catch(e) { /* ignore */ }
+                  }
+                };
+
+                const chartDatasets = [
+                  {
+                    // OHLC 데이터셋: 축 범위·툴팁·hover 등록용. 실제 그리기는 customCandlePlugin이 담당.
+                    // 플러그인이 직접 그리므로 여기선 완전 투명으로 숨김 처리.
+                    label: 'OHLC', data: candleData,
+                    color:       { up: 'transparent', down: 'transparent', unchanged: 'transparent' },
+                    borderColor: { up: 'transparent', down: 'transparent', unchanged: 'transparent' },
+                    borderWidth: 0,
+                    wickWidth: 0,
+                    barThickness: 1,
+                    maxBarThickness: 1,
+                    order: 0
+                  },
+                  ...maDatasets,
+                  {
+                    type: 'bar', label: '거래량',
+                    data: renderItems.map(i => ({ x: i.date.getTime(), y: i.volume })),
+                    backgroundColor: volColors, borderWidth: 0,
+                    yAxisID: 'volume', barPercentage: 0.6, categoryPercentage: 0.6, order: 2
+                  }
+                ];
+                if(window._attachTradingToDatasets && typeof window._attachTradingToDatasets === 'function'){
+                  try{ window._attachTradingToDatasets(chartDatasets); }catch(e){}
+                }
+
                 window._candleChart = new Chart(ctxC, {
-                type: 'candlestick',
-                data: {
-                  datasets: [
-                    {
-                      label: 'OHLC',
-                      data: candleData,
-                      color: {
-                        up:   COLOR_UP,
-                        down: COLOR_DOWN,
-                        unchanged: '#94a3b8'
+                  type: 'candlestick',
+                  // include zoom plugin at instance level if available to ensure pan/zoom works across environments
+                  plugins: (function(){ const arr = [crosshairPlugin, customCandlePlugin]; if(zoomPlugin) arr.push(zoomPlugin); return arr; })(),
+                  data: { datasets: chartDatasets },
+                  options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'index', intersect: false },
+                    onHover: (event, elements, chart) => {
+                      if(!elements || !elements.length){ updateOhlcBar(null); return; }
+                      const raw = elements[0].element.$context && elements[0].element.$context.raw;
+                      if(raw) updateOhlcBar({ o: raw.o, h: raw.h, l: raw.l, c: raw.c, vol: raw._vol, dateStr: raw._dateStr });
+                    },
+                    scales: {
+                      x: {
+                        type: 'time',
+                        time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
+                        min: minMs,
+                        max: maxMs,
+                        ticks: { color: '#64748b', autoSkip: true, maxTicksLimit: maxTicksLimitX, source: 'data' },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
                       },
-                      borderColor: {
-                        up:   COLOR_UP,
-                        down: COLOR_DOWN,
-                        unchanged: '#94a3b8'
+                      y: {
+                        position: 'right',
+                        title: { display: true, text: '가격', color: '#64748b' },
+                        ticks: { color: '#64748b', callback: function(value){ return fmtPriceAxis(value); } },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                      },
+                      volume: {
+                        position: 'left', grid: { display: false },
+                        ticks: { color: '#94a3b8', maxTicksLimit: 3, callback: function(value){ return fmtVolCompact(value); } },
+                        beginAtZero: true
+                      },
+                      indicator: {
+                        position: 'left', offset: true, grid: { display: false },
+                        ticks: { color: '#94a3b8', callback: function(value){ return fmtAxis(value); } },
+                        display: true
                       }
                     },
-                    ...maDatasets,
-                    {
-                      type: 'bar',
-                      label: '거래량',
-                      data: itemsToRender.map(i => ({ x: i.date.getTime(), y: i.volume })),
-                      backgroundColor: volColors,
-                      borderWidth: 0,
-                      yAxisID: 'volume',
-                      barPercentage: 0.6,
-                      categoryPercentage: 0.6,
-                      order: 2
-                    }
-                  ]
-                },
-                options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  animation: false,
-                  interaction: { mode: 'index', intersect: false },
-                  onHover: (event, elements, chart) => {
-                    if(!elements || !elements.length){ updateOhlcBar(null); return; }
-                    const raw = elements[0].element.$context && elements[0].element.$context.raw;
-                    if(raw) updateOhlcBar({ o: raw.o, h: raw.h, l: raw.l, c: raw.c, vol: raw._vol, dateStr: raw._dateStr });
-                  },
-                  scales: {
-                    x: {
-                      type: 'time',
-                      time: { unit: 'day', tooltipFormat: 'yyyy-MM-dd' },
-                      min: minMs,
-                      max: maxMs,
-                      ticks: {
-                        color: '#64748b',
-                        autoSkip: true,
-                        maxTicksLimit: maxTicksLimitX,
-                        source: 'data'
-                      },
-                      grid: { color: 'rgba(0,0,0,0.04)' }
-                    },
-                    y: {
-                      position: 'right',
-                      title: { display: true, text: '가격', color: '#64748b' },
-                      ticks: { color: '#64748b', callback: function(value){ return fmtPriceAxis(value); } },
-                      grid: { color: 'rgba(0,0,0,0.05)' }
-                    },
-                    volume: {
-                      position: 'left',
-                      grid: { display: false },
-                      ticks: { color: '#94a3b8', maxTicksLimit: 3, callback: function(value){ return fmtVolCompact(value); } },
-                      beginAtZero: true
-                    }
-                    ,
-                    indicator: {
-                      position: 'left',
-                      offset: true,
-                      grid: { display: false },
-                      ticks: { color: '#94a3b8', callback: function(value){ return fmtAxis(value); } },
-                      display: true
-                    }
-                  },
-                  plugins: {
-                    legend: { display: true, position: 'top', labels: { color: '#64748b', usePointStyle: true } },
-                    tooltip: {
-                      enabled: false,
-                      external: function(context){
-                        const tooltip = context.tooltip;
-                        const chart = context.chart;
-                        const container = chart.canvas.parentNode;
-                        let el = container.querySelector('.chartjs-tooltip');
-                        if(!el){ el = document.createElement('div'); el.className = 'chartjs-tooltip'; container.appendChild(el); }
-                        if(!tooltip || tooltip.opacity === 0){ el.style.display = 'none'; return; }
-                        // build content
-                        const title = tooltip.title || [];
-                        const bodyLines = [];
-                        (tooltip.dataPoints || []).forEach(dp => {
-                          const dsLabel = dp.dataset && dp.dataset.label ? String(dp.dataset.label) : '';
-                          if(dsLabel && dsLabel.indexOf('MA') === 0){
-                            const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
-                            bodyLines.push(`${dsLabel}: ${fmtPriceTooltip(v)}`);
-                          } else if(dp.raw && dp.raw.o !== undefined){
-                            bodyLines.push(`시가  : ${fmtPriceTooltip(dp.raw.o)}`);
-                            bodyLines.push(`고가  : ${fmtPriceTooltip(dp.raw.h)}`);
-                            bodyLines.push(`저가  : ${fmtPriceTooltip(dp.raw.l)}`);
-                            bodyLines.push(`종가  : ${fmtPriceTooltip(dp.raw.c)}`);
-                          } else {
-                            const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
-                            if(dsLabel === '거래량') bodyLines.push(`거래량: ${fmtVolCompact(v)}`);
-                            else if(dsLabel && dsLabel.indexOf('M2') === 0) bodyLines.push(`${dsLabel}: ${fmtM2Axis(v)}`);
-                            else bodyLines.push(`${dsLabel}: ${fmtAxis(v)}`);
+                    plugins: {
+                      zoom: {
+                        pan: {
+                          enabled: true, mode: 'x', modifierKey: null, threshold: 3,
+                          onPanComplete: function({ chart }){
+                            calcYRangeForView(chart);
+                            try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){}
                           }
-                        });
-                        el.innerHTML = `<div style="font-weight:700;margin-bottom:4px">${title.join(' / ')}</div><div>${bodyLines.join('<br>')}</div>`;
-                        el.style.display = 'block'; el.style.opacity = 1;
-                        // position inside container using caret coordinates
-                        const chartRect = chart.canvas.getBoundingClientRect();
-                        // tooltip.caretX/Y are relative to chart area
-                        const left = (tooltip.caretX || 0);
-                        const top = (tooltip.caretY || 0);
-                        el.style.left = left + 'px';
-                        el.style.top = top + 'px';
+                        },
+                        zoom: {
+                          wheel: { enabled: true, modifierKey: null, speed: 0.08 },
+                          pinch: { enabled: true },
+                          mode: 'x',
+                          onZoomComplete: function({ chart }){
+                            calcYRangeForView(chart);
+                            try{ if(window.updatePnlDisplay) window.updatePnlDisplay(); }catch(e){}
+                          }
+                        },
+                        limits: { x: { min: allMinMs, max: allMaxMs, minRange: 5 * 24 * 60 * 60 * 1000 } }
+                      },
+                      legend: { display: true, position: 'top', labels: { color: '#64748b', usePointStyle: true } },
+                      tooltip: {
+                        enabled: false,
+                        external: function(context){
+                          const tooltip = context.tooltip;
+                          const chart = context.chart;
+                          // place tooltip in document body so it's not clipped by chart container overflow
+                          let el = document.body.querySelector('.chartjs-tooltip');
+                          if(!el){ el = document.createElement('div'); el.className = 'chartjs-tooltip'; document.body.appendChild(el); }
+                          if(!tooltip || tooltip.opacity === 0){ el.style.display = 'none'; return; }
+                          const title = tooltip.title || [];
+                          const bodyLines = [];
+                          // Collect the set of indicator labels so we can skip them here
+                          // (they are rendered separately below via the extra-indicator lookup block)
+                          const indicatorLabels = new Set((window._indicatorMapping || []).map(m => m.label));
+                          (tooltip.dataPoints || []).forEach(dp => {
+                            const dsLabel = dp.dataset && dp.dataset.label ? String(dp.dataset.label) : '';
+                            // Skip indicator datasets — handled by the extra-indicator block below to avoid duplicates
+                            if(indicatorLabels.has(dsLabel)) return;
+                            if(dsLabel && dsLabel.indexOf('MA') === 0){
+                              const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
+                              bodyLines.push(`${dsLabel}: ${fmtPriceTooltip(v)}`);
+                            } else if(dp.raw && dp.raw.o !== undefined){
+                              bodyLines.push(`시가  : ${fmtPriceTooltip(dp.raw.o)}`);
+                              bodyLines.push(`고가  : ${fmtPriceTooltip(dp.raw.h)}`);
+                              bodyLines.push(`저가  : ${fmtPriceTooltip(dp.raw.l)}`);
+                              bodyLines.push(`종가  : ${fmtPriceTooltip(dp.raw.c)}`);
+                            } else {
+                              const v = dp.parsed && dp.parsed.y !== undefined ? dp.parsed.y : (dp.raw && dp.raw.y);
+                              if(dsLabel === '거래량') bodyLines.push(`거래량: ${fmtVolCompact(v)}`);
+                              else if(dsLabel && dsLabel.indexOf('M2') === 0) bodyLines.push(`${dsLabel}: ${fmtM2Axis(v)}`);
+                              else bodyLines.push(`${dsLabel}: ${fmtAxis(v)}`);
+                            }
+                          });
+                          // Append extra indicator values by looking up the indicator series by date (title[0])
+                          try{
+                            const mapping = window._indicatorMapping || [];
+                            // determine timestamp from tooltip title if possible
+                            let tMs = null;
+                            if(title && title.length && Date.parse(title[0])){
+                              tMs = Date.parse(title[0]);
+                            } else if(tooltip.dataPoints && tooltip.dataPoints.length){
+                              const dp0 = tooltip.dataPoints[0];
+                              tMs = (dp0 && dp0.raw && (dp0.raw.x || dp0.raw.time)) ? Number(dp0.raw.x || dp0.raw.time) : null;
+                            }
+                            if(tMs && window._extraSeries){
+                              try{
+                                for(let i=0;i<mapping.length;i++){
+                                  const m = mapping[i];
+                                  try{
+                                    const cbEl = document.getElementById(m.cb);
+                                    if(cbEl && !cbEl.checked) continue;
+
+                                    // First try to get value from the chart dataset directly
+                                    let foundVal = null;
+                                    try{
+                                      const existingDs = (chart && chart.data && Array.isArray(chart.data.datasets))
+                                        ? chart.data.datasets.find(ds=> ds.label === m.label) : null;
+                                      if(existingDs && existingDs.data && existingDs.data.length){
+                                        // Find closest point within 2 days
+                                        let bestDiff = Infinity, bestPt = null;
+                                        existingDs.data.forEach(p => {
+                                          if(!p || p.y === null || p.y === undefined || !isFinite(p.y)) return;
+                                          const diff = Math.abs(Number(p.x || p.time || 0) - tMs);
+                                          if(diff < bestDiff){ bestDiff = diff; bestPt = p; }
+                                        });
+                                        if(bestPt && bestDiff < 2*24*60*60*1000) foundVal = bestPt.y;
+                                      }
+                                    }catch(e){}
+
+                                    // Fallback: look up from raw _extraSeries
+                                    if(foundVal === null){
+                                      const series = window._extraSeries && window._extraSeries[m.key];
+                                      if(series && series.length){
+                                        let found = null, bestDiff = Infinity;
+                                        series.forEach(it => {
+                                          const d = (new Date(it.date)).getTime();
+                                          const diff = Math.abs(d - tMs);
+                                          if(diff < bestDiff){ bestDiff = diff; found = it; }
+                                        });
+                                        if(found && bestDiff < 2*24*60*60*1000) foundVal = Number(found.value);
+                                      }
+                                    }
+
+                                    if(foundVal !== null && isFinite(foundVal)){
+                                      if(m.label && m.label.indexOf('M2') === 0) bodyLines.push(`${m.label}: ${fmtM2Axis(foundVal)}`);
+                                      else if(m.label === 'Fear/Greed') bodyLines.push(`${m.label}: ${Math.round(foundVal)}`);
+                                      else bodyLines.push(`${m.label}: ${fmtAxis(foundVal)}`);
+                                    }
+                                  }catch(e){}
+                                }
+                              }catch(e){}
+                            }
+                          }catch(e){}
+                          el.innerHTML = `<div style="font-weight:700;margin-bottom:4px">${title.join(' / ')}</div><div>${bodyLines.join('<br>')}</div>`;
+                          el.style.display = 'block'; el.style.opacity = 1;
+                          el.style.position = 'absolute'; el.style.zIndex = 10000; el.style.pointerEvents = 'none';
+                          // position relative to viewport using canvas bounding rect + tooltip caret coords
+                          try{
+                            const rect = chart.canvas.getBoundingClientRect();
+                            // position tooltip very near the mouse pointer with minimal offset
+                            // Prefer using last tracked mouse coords as a robust fallback
+                            const m = window._lastChartMouse || {};
+                            let left = (m.x ? (m.x + window.scrollX) : (rect.left + (tooltip.caretX || 0) + window.scrollX)) + 2;
+                            let top  = (m.y ? (m.y + window.scrollY) : (rect.top  + (tooltip.caretY || 0) + window.scrollY)) + 2;
+                            // clamp inside viewport with small margins
+                            const maxLeft = window.scrollX + document.documentElement.clientWidth - (el.offsetWidth || 200) - 4;
+                            const maxTop  = window.scrollY + document.documentElement.clientHeight - (el.offsetHeight || 100) - 4;
+                            if(left > maxLeft) left = Math.max(window.scrollX + 4, maxLeft);
+                            if(top  > maxTop)  top  = Math.max(window.scrollY + 4, maxTop);
+                            el.style.left = left + 'px';
+                            el.style.top  = top  + 'px';
+                          }catch(e){
+                            // fallback: position at caret coords with minimal offset
+                            el.style.left = ((tooltip.caretX || 0) + 2) + 'px';
+                            el.style.top  = ((tooltip.caretY || 0) + 2) + 'px';
+                          }
+                        }
                       }
                     }
                   }
-                }
                 });
+
+                // 초기 Y축 범위를 선택 기간에 맞게 세팅
+                calcYRangeForView(window._candleChart);
+
+                // 커서 및 드래그-팬 (pointer events 사용)
+                canvasC.style.cursor = 'crosshair';
+                if(!canvasC._cursorBound){
+                  canvasC._cursorBound = true;
+                  let isPointerDown = false;
+                  let pointerId = null;
+                  let startX = 0;
+                  let startMin = null, startMax = null;
+                  function getChartXRange(c){
+                    try{
+                      const s = c.scales && c.scales.x;
+                      if(s && s.min != null && s.max != null) return { min: s.min, max: s.max };
+                      if(c.options && c.options.scales && c.options.scales.x){
+                        return { min: c.options.scales.x.min, max: c.options.scales.x.max };
+                      }
+                    }catch(e){}
+                    return null;
+                  }
+                  canvasC.addEventListener('pointerdown', function(e){
+                    if(e.button !== 0) return; // only left button
+                    isPointerDown = true; pointerId = e.pointerId; canvasC.setPointerCapture(pointerId);
+                    canvasC.style.cursor = 'grabbing';
+                    startX = e.clientX;
+                    const c = window._candleChart; const range = getChartXRange(c);
+                    startMin = range ? range.min : null; startMax = range ? range.max : null;
+                  });
+                  canvasC.addEventListener('pointermove', function(e){
+                    if(!isPointerDown || e.pointerId !== pointerId) return;
+                    try{
+                      const c = window._candleChart; if(!c) return;
+                      const chartArea = c.chartArea || (c.scales && c.scales.x && c.scales.x.chart.chartArea) || null;
+                      if(!chartArea) return;
+                      const dx = e.clientX - startX;
+                      const msPerPx = (startMax - startMin) / Math.max(1, chartArea.right - chartArea.left);
+                      const deltaMs = -dx * msPerPx;
+                      let newMin = Math.round(startMin + deltaMs);
+                      let newMax = Math.round(startMax + deltaMs);
+                      const allMin = (window._allItemsLocal && window._allItemsLocal[0]) ? window._allItemsLocal[0].date.getTime() : null;
+                      const allMax = (window._allItemsLocal && window._allItemsLocal.length) ? window._allItemsLocal[window._allItemsLocal.length-1].date.getTime() : null;
+                      if(allMin != null && allMax != null){
+                        const span = newMax - newMin;
+                        if(newMin < allMin){ newMin = allMin; newMax = allMin + span; }
+                        if(newMax > allMax){ newMax = allMax; newMin = allMax - span; }
+                      }
+                      if(c.options && c.options.scales && c.options.scales.x){ c.options.scales.x.min = newMin; c.options.scales.x.max = newMax; }
+                      try{ c.update('none'); }catch(e){}
+                      try{ calcYRangeForView(c); }catch(e){}
+                    }catch(ex){ console.warn('drag-pan err', ex); }
+                  });
+                  function endPointer(e){ if(e && e.pointerId && e.pointerId !== pointerId) return; isPointerDown = false; try{ if(pointerId) canvasC.releasePointerCapture(pointerId); }catch(e){} pointerId = null; canvasC.style.cursor = 'crosshair'; }
+                  canvasC.addEventListener('pointerup', endPointer);
+                  canvasC.addEventListener('pointercancel', endPointer);
+                  canvasC.addEventListener('pointerleave', endPointer);
+                }
+
+                // 더블클릭 → 보기 초기화 + Y축 재계산
+                if(!canvasC._dblBound){
+                  canvasC._dblBound = true;
+                  canvasC.addEventListener('dblclick', ()=>{
+                    try{
+                      const c = window._candleChart;
+                      if(c && c.resetZoom){ c.resetZoom(); calcYRangeForView(c); }
+                    }catch(e){}
+                  });
+                }
+
+                // 보기 초기화 버튼
+                try{
+                  const zBtn = document.getElementById('btnZoomReset');
+                  if(zBtn){
+                    const nb = zBtn.cloneNode(true);
+                    zBtn.parentNode.replaceChild(nb, zBtn);
+                    nb.addEventListener('click', ()=>{
+                      try{ const c = window._candleChart; if(c && c.resetZoom){ c.resetZoom(); calcYRangeForView(c); } }catch(e){}
+                    });
+                  }
+                }catch(e){}
+
               }catch(err){
                 console.error('캔들 차트 생성 실패:', err);
                 window._lastChartError = String(err && err.stack ? err.stack : err);
@@ -618,15 +1014,9 @@
                 return;
               }
 
-              // volume is drawn as a bar dataset within the main candlestick chart; no separate volume chart
-            }
-
-            // 컨트롤 연결
-            const startInput = document.getElementById('startDate');
-            const endInput   = document.getElementById('endDate');
-            const applyBtn   = document.getElementById('applyRange');
-            const resetBtn   = document.getElementById('resetRange');
-            const presets    = document.querySelectorAll('.preset');
+              try{ if(window._tradingOrders && window.tryFillLimitOrders) { window.tryFillLimitOrders(); } }catch(e){}
+              try{ if(window._tradingOrders){ if(window.updateTradingPanel) window.updateTradingPanel(); if(window.updatePnlDisplay) window.updatePnlDisplay(); } }catch(e){}
+            } // end renderChartFor
 
             // 기간 변경 후 체크된 지표를 메인 차트에 재적용
             function reapplyCheckedIndicators(){
@@ -640,25 +1030,38 @@
               if(!chart) return;
               mapping.forEach(m=>{
                 const el = document.getElementById(m.cb);
-                if(el && el.checked){ addIndicatorDataset(chart, m.label, m.key, m.color); }
+                if(el && el.checked){ addIndicatorDataset(chart, m.label, m.key, m.color, true); }
               });
             }
 
             function applyRangeFromInputs(){
-              const s = startInput.value; const e = endInput.value;
-              if(!s || !e) return;
-              const start = new Date(s + 'T00:00:00');
-              const requestedEnd = new Date(e + 'T23:59:59');
-              // clamp rendering end to last available data so chart shows no empty future area
-              const lastDataDate = (allItemsLocal && allItemsLocal.length) ? allItemsLocal[allItemsLocal.length-1].date : null;
-              const end = (lastDataDate && requestedEnd > lastDataDate) ? lastDataDate : requestedEnd;
-              renderChartFor(allItemsLocal.filter(x => x.date >= start && x.date <= end));
-              statusEl.textContent = '';
-              reapplyCheckedIndicators();
+              try{
+                if(!allItemsLocal || !allItemsLocal.length) return;
+                const firstDataDate = allItemsLocal[0].date;
+                const lastDataDate  = allItemsLocal[allItemsLocal.length-1].date;
+                let startDate = null, endDate = null;
+                if(startInput && startInput.value){ startDate = new Date(startInput.value + 'T00:00:00'); }
+                if(endInput && endInput.value){   endDate   = new Date(endInput.value   + 'T23:59:59'); }
+                if(!startDate) startDate = firstDataDate;
+                if(!endDate)   endDate   = lastDataDate;
+                // clamp to available data
+                if(startDate < firstDataDate) startDate = firstDataDate;
+                if(endDate   > lastDataDate)  endDate   = lastDataDate;
+                const filtered = allItemsLocal.filter(x => x.date >= startDate && x.date <= endDate);
+                renderChartFor(filtered);
+                statusEl.textContent = '';
+                try{ reapplyCheckedIndicators(); }catch(e){}
+              }catch(e){ console.warn('applyRangeFromInputs error', e); }
             }
 
             applyBtn.addEventListener('click', applyRangeFromInputs);
-            resetBtn.addEventListener('click', ()=>{ renderChartFor(allItemsLocal); statusEl.textContent = ''; reapplyCheckedIndicators(); });
+            // reset view (전체) button
+            try{
+              const resetBtn = document.getElementById('resetRange');
+              if(resetBtn){
+                resetBtn.addEventListener('click', ()=>{ try{ renderChartFor(allItemsLocal); statusEl.textContent = ''; reapplyCheckedIndicators(); }catch(e){ console.warn('resetRange handler failed', e); } });
+              }
+            }catch(e){ console.warn('resetBtn init failed', e); }
             presets.forEach(p => p.addEventListener('click', ev => {
               const days = Number(ev.currentTarget.dataset.days);
               if(!allItemsLocal.length) return;
@@ -694,9 +1097,9 @@
               }catch(e){ console.warn('failed to load extra series', e); window._extraSeries = {}; }
             }
 
-            function addIndicatorDataset(chart, label, key, color){
+            function addIndicatorDataset(chart, label, key, color, useFull){
+              if(useFull === undefined) useFull = false;
               if(!window._extraSeries || !window._extraSeries[key]) return;
-              const exists = chart.data.datasets.find(ds=> ds.label === label);
               // normalize to numeric values and timestamps
               const raw = window._extraSeries[key].map(it=> {
                 let t = it.date;
@@ -705,22 +1108,70 @@
                 return { x: t, y: isFinite(y) ? y : null };
               }).filter(x=> x.x && x.y !== null && x.y !== undefined);
 
-              // determine current visible range (from last rendered data or inputs)
-              let minMs = null, maxMs = null;
-              if(window._lastRenderData && window._lastRenderData.length){
-                minMs = window._lastRenderData[0].date.getTime();
-                maxMs = window._lastRenderData[window._lastRenderData.length-1].date.getTime();
-              } else if(startInput && endInput && startInput.value && endInput.value){
-                minMs = new Date(startInput.value + 'T00:00:00').getTime();
-                maxMs = new Date(endInput.value + 'T23:59:59').getTime();
+              // Build a lookup map from date-string → value for fast fuzzy matching
+              const rawMap = Object.create(null);
+              raw.forEach(r => {
+                rawMap[String(r.x)] = r.y;
+                // also index by YYYY-MM-DD string for day-level matching
+                try{
+                  const d = new Date(r.x);
+                  const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                  rawMap[s] = r.y;
+                }catch(e){}
+              });
+
+              // Helper: look up value for a timestamp from rawMap with fuzzy fallback
+              function lookupVal(tMs){
+                let v = rawMap[String(tMs)];
+                if(v !== undefined) return v;
+                const d = new Date(tMs);
+                const s = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                v = rawMap[s];
+                if(v !== undefined) return v;
+                // ±1 day tolerance
+                for(let delta of [-86400000, 86400000, -172800000, 172800000]){
+                  const d2 = new Date(tMs + delta);
+                  const s2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
+                  v = rawMap[s2];
+                  if(v !== undefined) return v;
+                }
+                return null;
               }
-              let arr = raw;
-              if(minMs !== null){ arr = raw.filter(p => p.x >= minMs && p.x <= maxMs); }
+
+              // Always align to the full allItemsLocal timeline so the indicator
+              // covers the entire chart (pan/zoom will reveal it everywhere)
+              let arr = [];
+              const baseItems = allItemsLocal && allItemsLocal.length ? allItemsLocal : (window._lastRenderData || []);
+              if(baseItems.length){
+                arr = baseItems.map(it => {
+                  const t = it.date.getTime();
+                  const v = lookupVal(t);
+                  return { x: t, y: (v !== undefined && v !== null) ? v : null };
+                });
+              } else {
+                arr = raw.slice();
+              }
 
               // compute min/max and apply padding; special case Fear/Greed (0-100)
-              if(arr.length){
+              const validArr = arr.filter(p => p.y !== null && p.y !== undefined && isFinite(p.y));
+              if(validArr.length){
                 let min = Infinity, max = -Infinity;
-                arr.forEach(v=>{ if(v.y < min) min = v.y; if(v.y > max) max = v.y; });
+                validArr.forEach(v=>{ if(v.y < min) min = v.y; if(v.y > max) max = v.y; });
+
+                // If other indicator datasets already exist, expand the axis range to fit all
+                try{
+                  chart.data.datasets.forEach(ds => {
+                    if(ds.yAxisID === 'indicator' && ds.label !== label && ds.label !== 'Fear/Greed'){
+                      (ds.data || []).forEach(p => {
+                        if(p && p.y !== null && p.y !== undefined && isFinite(p.y)){
+                          if(p.y < min) min = p.y;
+                          if(p.y > max) max = p.y;
+                        }
+                      });
+                    }
+                  });
+                }catch(e){}
+
                 if(label === 'Fear/Greed'){
                   chart.options.scales.indicator.min = 0;
                   chart.options.scales.indicator.max = 100;
@@ -735,28 +1186,27 @@
                   } else {
                     chart.options.scales.indicator.ticks.maxTicksLimit = 5;
                   }
-                  // Adjust indicator tick formatter for M2 series specifically
                   try{
                     if(label && label.indexOf('M2') === 0){
                       chart.options.scales.indicator.ticks.callback = function(v){ return fmtM2Axis(v); };
                     } else if(label === 'Fear/Greed'){
-                      chart.options.scales.indicator.ticks.callback = function(v){ return String(v); };
+                      chart.options.scales.indicator.ticks.callback = function(v){ return String(Math.round(v)); };
                     } else {
                       chart.options.scales.indicator.ticks.callback = function(v){ return fmtAxis(v); };
                     }
-                  }catch(e){ /* ignore */ }
+                  }catch(e){}
                 } catch(e) {
                   console.warn('failed to set indicator ticks', e);
                 }
               }
 
-              if(arr.length === 0){
-                // no data in range: remove existing dataset if present
+              if(!validArr.length){
                 const idx = chart.data.datasets.findIndex(ds=> ds.label === label);
                 if(idx !== -1){ chart.data.datasets.splice(idx,1); chart.update(); }
                 return;
               }
 
+              const exists = chart.data.datasets.find(ds=> ds.label === label);
               if(exists){ exists.hidden = false; exists.data = arr; }
               else {
                 chart.data.datasets.push({ type:'line', label: label, data: arr, borderColor: color, borderWidth:1.6, pointRadius:0, spanGaps:true, yAxisID:'indicator', order:3 });
@@ -793,13 +1243,16 @@
                     const chart = window._candleChart;
                     if(!chart){ console.warn('candleChart not ready'); return; }
                     if(el.checked){
-                      addIndicatorDataset(chart, m.label, m.key, m.color);
+                      // Add indicator using the full raw series so it covers the entire timeline
+                      addIndicatorDataset(window._candleChart || chart, m.label, m.key, m.color, true);
                     } else {
                       removeIndicatorDataset(chart, m.label);
                     }
                   }catch(e){ console.warn('indicator toggle failed', e); }
                 });
               });
+              // expose mapping for tooltip/date lookups
+              window._indicatorMapping = mapping;
             })();
 
             // Observe container to auto-recover chart if canvas is removed or collapsed
@@ -823,6 +1276,156 @@
             console.error(err);
           }
         }
+
+        // ----- Trading / simulated orders support -----
+        (function(){
+          window._tradingOrders = window._tradingOrders || [];
+          window._tradingPositions = window._tradingPositions || { netQty:0, avgPrice:0 };
+
+          function nextOrderId(){ return 'o' + Math.floor(Math.random()*1e9).toString(36); }
+
+          function updateTradingPanel(){
+            const ordersEl = document.getElementById('ordersList');
+            const posEl = document.getElementById('positionsSummary');
+            if(!ordersEl || !posEl) return;
+            if(!(window._tradingOrders && window._tradingOrders.length)) ordersEl.innerHTML = '<small style="color:#94a3b8;">(주문 없음)</small>';
+            else{
+              ordersEl.innerHTML = window._tradingOrders.map(o=>{
+                const st = o.side === 'buy' ? '<strong style="color:#166534">BUY</strong>' : '<strong style="color:#991b1b">SELL</strong>';
+                const status = o.filled ? '<span style="color:#06b6d4">체결</span>' : '<span style="color:#fb923c">대기</span>';
+                const priceText = o.price!=null ? Number(o.price).toLocaleString() : '(MKT)';
+                return `<div style="padding:6px 0;border-bottom:1px dashed #f1f5f9">${st} ${o.qty} @ ${priceText} <span style="float:right">${status} <button data-id="${o.id}" class="cancelOrder" style="margin-left:8px;padding:2px 6px;border-radius:6px;border:1px solid #eee;background:#fff">취소</button></span></div>`;
+              }).join('');
+            }
+            // positions summary
+            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
+            if(!pos || !pos.netQty){ posEl.innerHTML = '<small style="color:#94a3b8;">(포지션 없음)</small>'; }
+            else{
+              const side = pos.netQty > 0 ? 'Long' : 'Short';
+              posEl.innerHTML = `<div><strong>${side}</strong> ${Math.abs(pos.netQty)} @ avg ${Number(pos.avgPrice).toLocaleString()}</div><div id="posPnl">Unrealized: -</div>`;
+            }
+            // attach cancel handlers
+            Array.from(document.querySelectorAll('#ordersList .cancelOrder')).forEach(btn=> btn.addEventListener('click', ev=>{
+              const id = btn.getAttribute('data-id'); window._tradingOrders = (window._tradingOrders||[]).filter(x=> x.id !== id); updateTradingPanel(); try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
+            }));
+          }
+
+          function placeMarket(side, qty){
+            try{
+              const last = (window._lastRenderData && window._lastRenderData.length) ? window._lastRenderData[window._lastRenderData.length-1] : null;
+              if(!last) return alert('차트 데이터가 없습니다.');
+              const price = last.close;
+              const o = { id: nextOrderId(), type:'market', side, qty: Number(qty), price, filled:true, timeMs: last.date.getTime() };
+              window._tradingOrders = window._tradingOrders || [];
+              window._tradingOrders.push(o);
+              applyFillToPositions(o);
+              updateTradingPanel();
+              try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
+            }catch(e){ console.error(e); }
+          }
+
+          function placeLimit(side, qty, price){
+            const id = nextOrderId();
+            const o = { id, type:'limit', side, qty: Number(qty), price: Number(price), filled:false, timeMs: Date.now() };
+            window._tradingOrders = window._tradingOrders || [];
+            window._tradingOrders.push(o);
+            updateTradingPanel();
+            try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
+          }
+
+          function tryFillLimitOrders(){
+            if(!(window._tradingOrders && window._tradingOrders.length && window._lastRenderData && window._lastRenderData.length)) return;
+            const last = window._lastRenderData[window._lastRenderData.length-1];
+            const lastClose = last.close;
+            let changed = false;
+            window._tradingOrders.forEach(o=>{
+              if(o.filled) return;
+              if(o.side === 'buy' && lastClose <= o.price){ o.filled = true; o.fillTimeMs = last.date.getTime(); applyFillToPositions(o); changed = true; }
+              if(o.side === 'sell' && lastClose >= o.price){ o.filled = true; o.fillTimeMs = last.date.getTime(); applyFillToPositions(o); changed = true; }
+            });
+            if(changed){ updateTradingPanel(); try{ if(window._candleChart) window._candleChart.update(); }catch(e){} }
+          }
+
+          function applyFillToPositions(order){
+            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
+            const sideSign = order.side === 'buy' ? 1 : -1;
+            const qty = Number(order.qty) * sideSign;
+            // calc new avgPrice for net position (simple weighted avg)
+            const newNet = (pos.netQty || 0) + qty;
+            if(pos.netQty === 0){ // opening
+              pos.avgPrice = order.price; pos.netQty = qty;
+            } else if((pos.netQty > 0 && newNet > 0) || (pos.netQty < 0 && newNet < 0)){ // increasing same direction
+              pos.avgPrice = ((pos.avgPrice * Math.abs(pos.netQty)) + (order.price * Math.abs(qty))) / (Math.abs(pos.netQty) + Math.abs(qty));
+              pos.netQty = newNet;
+            } else { // reducing or flipping
+              // simple approach: if crossing zero, compute remaining qty and set avg to order.price for new side
+              if(Math.sign(pos.netQty) !== Math.sign(newNet) && newNet !== 0){ // flipped
+                pos.avgPrice = order.price; pos.netQty = newNet;
+              } else if(newNet === 0){ pos.avgPrice = 0; pos.netQty = 0; }
+              else { pos.netQty = newNet; }
+            }
+            window._tradingPositions = pos;
+            updatePnlDisplay();
+          }
+
+          function updatePnlDisplay(){
+            const pnlEl = document.getElementById('posPnl');
+            if(!pnlEl) return;
+            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
+            if(!pos || !pos.netQty){ pnlEl.innerHTML = '' ; return; }
+            const last = (window._lastRenderData && window._lastRenderData.length) ? window._lastRenderData[window._lastRenderData.length-1] : null;
+            if(!last){ pnlEl.innerHTML = ''; return; }
+            const mark = last.close;
+            const unreal = (mark - pos.avgPrice) * pos.netQty; // signed
+            pnlEl.innerHTML = `Unrealized P&L: <strong>${unreal >= 0 ? '+' : ''}${Number(unreal).toLocaleString()}</strong> (mark ${Number(mark).toLocaleString()})`;
+          }
+
+          // wire UI
+          document.getElementById('btnMarketBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('buy', q); });
+          document.getElementById('btnMarketSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('sell', q); });
+          document.getElementById('btnLimitBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('buy', q, p); });
+          document.getElementById('btnLimitSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('sell', q, p); });
+
+          // click on a marker to cancel (nearest, intersect)
+          document.getElementById('historyChart').addEventListener('click', (ev)=>{
+            try{
+              const chart = window._candleChart; if(!chart) return;
+              const elems = chart.getElementsAtEventForMode(ev, 'nearest', { intersect: true }, true);
+              if(!elems || !elems.length) return;
+              const el = elems[0];
+              const ds = chart.data.datasets[el.datasetIndex];
+              if(!ds || ds.label !== 'Orders') return;
+              const point = ds.data[el.index];
+              // find matching order by time+price
+              const cand = (window._tradingOrders || []).find(o=> Math.abs((o.timeMs || 0) - (point.x || 0)) < 1000 || (o.price === point.y));
+              if(cand && !cand.filled){ if(confirm('이 주문을 취소하시겠습니까?')){ window._tradingOrders = window._tradingOrders.filter(x=> x.id !== cand.id); updateTradingPanel(); chart.update(); } }
+            }catch(e){ console.warn(e); }
+          });
+
+          // expose helper for chart render to include orders and try fills
+          window._attachTradingToDatasets = function(datasets){
+            const orders = window._tradingOrders || [];
+            if(!orders.length) return datasets;
+            const pts = orders.map(o=>({ x: o.fillTimeMs || o.timeMs || Date.now(), y: o.price, id: o.id, side: o.side, filled: !!o.filled }));
+            const bg = orders.map(o=> o.side === 'buy' ? COLOR_UP : COLOR_DOWN);
+            const br = bg;
+            datasets.push({ type:'scatter', label:'Orders', data: pts, pointBackgroundColor: bg, pointBorderColor: br, pointRadius: 7, showLine:false, yAxisID: 'y', order:4 });
+            return datasets;
+          };
+
+          // expose some helpers to outer scope so render logic can call them
+          window.tryFillLimitOrders = tryFillLimitOrders;
+          window.updateTradingPanel = updateTradingPanel;
+          window.updatePnlDisplay = updatePnlDisplay;
+          window.placeMarketOrder = placeMarket;
+          window.placeLimitOrder = placeLimit;
+
+          // call tryFillLimitOrders periodically (after render)
+          setInterval(()=>{ tryFillLimitOrders(); updatePnlDisplay(); }, 2000);
+
+          // initial panel update
+          updateTradingPanel();
+        })();
 
         loadChartData();
       })();
