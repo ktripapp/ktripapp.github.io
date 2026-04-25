@@ -322,6 +322,7 @@
     <!-- CDN fallback: if vendor files are 404 on GitHub Pages, dynamically load from CDN -->
     <script>
       (function(){
+        function start(){
         function loadScript(src, cb){
           var s = document.createElement('script'); s.src = src; s.async = false;
           s.onload = function(){ cb && cb(null); };
@@ -329,28 +330,52 @@
           document.head.appendChild(s);
         }
         function ensureChartAndPlugins(){
-          if(window.Chart) return Promise.resolve();
           return new Promise(function(resolve){
-            // try popular CDN for Chart.js v3
-            loadScript('https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', function(err){
-              if(!err && window.Chart) return resolve();
-              // final attempt (unpkg)
-              loadScript('https://unpkg.com/chart.js@3.9.1/dist/chart.min.js', function(){ resolve(); });
-            });
+            var maxWait = Date.now() + 15000; // 15s timeout
+            function isCandlestickRegistered(){
+              try{
+                if(!window.Chart) return false;
+                if(window.Chart.registry && typeof window.Chart.registry.getController === 'function'){
+                  if(window.Chart.registry.getController('candlestick')) return true;
+                }
+                if(window.Chart.controllers){
+                  return Object.keys(window.Chart.controllers).some(k=> String(k).toLowerCase().indexOf('candlestick') !== -1);
+                }
+              }catch(e){}
+              return false;
+            }
+
+            function tryResolve(){
+              if(isCandlestickRegistered()) return resolve();
+              if(Date.now() > maxWait) return resolve(); // give up after timeout
+              setTimeout(checkAndLoad, 120);
+            }
+
+            function checkAndLoad(){
+              if(!window.Chart){
+                loadScript('https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js', function(err){
+                  if(window.Chart) return checkAndLoad();
+                  loadScript('https://unpkg.com/chart.js@3.9.1/dist/chart.min.js', function(){ checkAndLoad(); });
+                });
+                return;
+              }
+              // load financial plugin then wait for registration
+              if(!isCandlestickRegistered()){
+                loadScript('https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js', function(){
+                  // also load adapter and zoom (non-blocking)
+                  loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js');
+                  loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js');
+                  setTimeout(tryResolve, 80);
+                });
+                return;
+              }
+              tryResolve();
+            }
+
+            checkAndLoad();
           });
         }
-        ensureChartAndPlugins().then(function(){
-          // load plugins only if they are not already available
-          if(!window.ChartFinancial){
-            loadScript('https://cdn.jsdelivr.net/npm/chartjs-chart-financial@3.3.0/dist/chartjs-chart-financial.min.js');
-          }
-          if(!window.dateFnsAdapter && !window.chartjsAdapterDateFns){
-            loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js');
-          }
-          if(!window.chartjsPluginZoom){
-            loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1/dist/chartjs-plugin-zoom.min.js');
-          }
-        }).catch(function(){ /* ignore */ });
+        ensureChartAndPlugins().catch(function(){}).then(function(){ /* continue regardless */ });
       })();
     </script>
     <script>
@@ -636,16 +661,19 @@
                     chart.canvas.addEventListener('mouseleave', onLeave);
                   },
                   afterDraw(chart){
-                    if(this._x == null) return;
-                    const { ctx, chartArea: a } = chart;
-                    if(this._x < a.left || this._x > a.right || this._y < a.top || this._y > a.bottom) return;
-                    ctx.save();
-                    ctx.setLineDash([3, 3]);
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle = 'rgba(100,116,139,0.5)';
-                    ctx.beginPath(); ctx.moveTo(this._x, a.top);   ctx.lineTo(this._x, a.bottom); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(a.left, this._y);  ctx.lineTo(a.right,  this._y); ctx.stroke();
-                    ctx.restore();
+                    try{
+                      if(this._x == null) return;
+                      const { ctx, chartArea: a } = chart;
+                      if(!a) return;
+                      if(this._x < a.left || this._x > a.right || this._y < a.top || this._y > a.bottom) return;
+                      ctx.save();
+                      ctx.setLineDash([3, 3]);
+                      ctx.lineWidth = 1;
+                      ctx.strokeStyle = 'rgba(100,116,139,0.5)';
+                      ctx.beginPath(); ctx.moveTo(this._x, a.top);   ctx.lineTo(this._x, a.bottom); ctx.stroke();
+                      ctx.beginPath(); ctx.moveTo(a.left, this._y);  ctx.lineTo(a.right,  this._y); ctx.stroke();
+                      ctx.restore();
+                    }catch(e){ /* ignore drawing errors */ }
                   }
                 };
 
@@ -1461,8 +1489,10 @@
           updateTradingPanel();
         })();
 
-        loadChartData();
-      })();
+            loadChartData();
+            }
+            if(window.Chart) start(); else { var _t = setInterval(function(){ if(window.Chart){ clearInterval(_t); start(); } }, 100); }
+          })();
     </script>
 
     <!-- GAME DETAIL CARDS -->
