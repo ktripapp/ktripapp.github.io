@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="google-adsense-account" content="ca-pub-8900421212808751">
+  <meta name="description" content="MBTI Game — 간단한 질문으로 성격 유형을 알아보는 테스트. Godsaeng에서 무료로 즐기세요." />
+  <title>MBTI Game — Godsaeng</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nanum Gothic','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif; background:#f6f7fb; color:#1e293b; }
+    main { max-width:860px; margin:48px auto; padding:0 20px 60px; }
+    .card { background:#fff; border-radius:14px; box-shadow:0 6px 24px rgba(15,23,42,0.07); padding:32px 36px; margin-bottom:24px; }
+    .back { color:#6b7280; text-decoration:none; font-size:0.95rem; display:inline-block; margin-bottom:22px; }
+    .back:hover { color:#8b5cf6; }
+    h1 { font-size:1.8rem; color:#0f172a; margin-bottom:10px; }
+    .badge { display:inline-block; background:#ede9fe; color:#6d28d9; border-radius:6px; padding:3px 10px; font-size:0.82rem; font-weight:700; margin-bottom:16px; }
+    p { color:#374151; line-height:1.7; margin-bottom:12px; }
+    h3 { color:#8b5cf6; margin:24px 0 10px; font-size:1.05rem; border-left:4px solid #8b5cf6; padding-left:10px; }
+    ul { color:#334155; padding-left:20px; }
+    ul li { list-style:disc; line-height:1.8; }
+    .mbti-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0; }
+    .mbti-item { background:#f5f3ff; border-radius:10px; padding:12px; text-align:center; }
+    .mbti-item .axis { font-size:1.2rem; font-weight:800; color:#7c3aed; }
+    .mbti-item .desc { font-size:0.78rem; color:#6b7280; margin-top:4px; line-height:1.4; }
+    .how-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin:12px 0; }
+    .step { background:#f5f3ff; border-radius:10px; padding:14px 16px; font-size:0.9rem; color:#0f172a; }
+    .step strong { display:block; color:#7c3aed; margin-bottom:4px; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.4px; }
+    .notice { background:#fef9c3; border-left:4px solid #eab308; border-radius:8px; padding:14px 18px; font-size:0.9rem; color:#713f12; margin-top:16px; }
+    .cta { display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; }
+    .cta a { padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:700; }
+    .btn-main { background:#8b5cf6; color:#fff; }
+    .btn-back { background:transparent; color:#0f172a; border:1px solid #e2e8f0; } }@media (max-width:600px){.card{padding:22px 18px;}.cta{flex-direction:column;}.cta a{text-align:center;width:100%;}.how-grid{grid-template-columns:1fr 1fr;}h1{font-size:1.5rem;}}@media (max-width:400px){.how-grid{grid-template-columns:1fr;}
+    @media (max-width: 500px) { .mbti-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 340px) { .mbti-grid { grid-template-columns: 1fr 1fr; font-size: 0.82rem; } }
+    footer { margin-top:32px; color:#94a3b8; font-size:0.87rem; text-align:center; }
+    footer a { color:#cbd5e1; text-decoration:none; margin:0 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="index.html" class="back">← 돌아가기</a>
+
+  <div class="card">
+    <span class="badge">🧠 성격 테스트</span>
+    <h1>MBTI Game</h1>
+    <p>간단한 질문을 통해 성격 경향을 파악하는 MBTI 스타일 테스트입니다. 10~20개의 짧고 직관적인 질문에 답하면 나의 성격 유형과 간단한 요약을 확인할 수 있습니다. 결과를 친구에게 공유하고 서로의 성격을 비교해보세요!</p>
+
+    <h3>MBTI 4가지 축</h3>
+    <div class="mbti-grid">
+      <div class="mbti-item">
+        <div class="axis">E / I</div>
+        <div class="desc">외향 (Extraversion)<br>vs 내향 (Introversion)</div>
+      </div>
+      <div class="mbti-item">
+        <div class="axis">S / N</div>
+        <div class="desc">감각 (Sensing)<br>vs 직관 (Intuition)</div>
+      </div>
+      <div class="mbti-item">
+        <div class="axis">T / F</div>
+        <div class="desc">사고 (Thinking)<br>vs 감정 (Feeling)</div>
+      </div>
+      <div class="mbti-item">
+        <div class="axis">J / P</div>
+        <div class="desc">판단 (Judging)<br>vs 인식 (Perceiving)</div>
+      </div>
+    </div>
+
+    <h3>테스트 방법</h3>
+    <div class="how-grid">
+      <div class="step"><strong>STEP 1</strong>테스트를 시작하면 두 가지 선택지가 있는 질문이 표시됩니다.</div>
+      <div class="step"><strong>STEP 2</strong>직관적으로 나에게 더 가까운 항목을 선택하세요.</div>
+      <div class="step"><strong>STEP 3</strong>모든 질문이 끝나면 4자리 MBTI 유형이 분석됩니다.</div>
+      <div class="step"><strong>STEP 4</strong>결과 요약을 확인하고 친구에게 공유해보세요!</div>
+    </div>
+
+    <h3>주요 특징</h3>
+    <ul>
+      <li>직관적인 양자택일 질문 구성으로 빠르고 쉬운 진행</li>
+      <li>16가지 성격 유형에 대한 간결한 결과 요약 제공</li>
+      <li>결과 공유 기능으로 친구와 비교 가능</li>
+      <li>진단보다 자기 이해와 재미에 초점</li>
+      <li>재시작 기능으로 다른 시각으로 재테스트 가능</li>
+    </ul>
+
+    <div class="notice">
+      ⚠️ <strong>안내:</strong> 본 테스트는 오락 및 자기성찰 목적의 참고용입니다. 전문적인 심리 검사나 진단을 대체하지 않으며, 결과를 절대적으로 신뢰하거나 타인을 판단하는 기준으로 사용하지 마세요.
+    </div>
+
+    <div class="cta">
+      <a href="https://godsaeng.streamlit.app/MBTI_Game" class="btn-main">🚀 실행하기 (Streamlit)</a>
+      <a href="index.html" class="btn-back">소개로 돌아가기</a>
+    </div>
+  </div>
+
+  <footer>
+    실제 테스트는 Streamlit 앱에서 실행됩니다. 이 페이지는 설명 및 바로가기 역할입니다.<br>
+    <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a>
+  </footer>
+</main>
+</body>
+</html>

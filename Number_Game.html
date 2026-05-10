@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="google-adsense-account" content="ca-pub-8900421212808751">
+  <meta name="description" content="Number Game — 숫자를 추측해 점수를 쌓는 빠른 반응 게임. Godsaeng에서 무료로 즐기세요." />
+  <title>Number Game — Godsaeng</title>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nanum Gothic','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif; background:#f6f7fb; color:#1e293b; }
+    main { max-width:860px; margin:48px auto; padding:0 20px 60px; }
+    .card { background:#fff; border-radius:14px; box-shadow:0 6px 24px rgba(15,23,42,0.07); padding:32px 36px; margin-bottom:24px; }
+    .back { color:#6b7280; text-decoration:none; font-size:0.95rem; display:inline-block; margin-bottom:22px; }
+    .back:hover { color:#0ea5e9; }
+    h1 { font-size:1.8rem; color:#0f172a; margin-bottom:10px; }
+    .badge { display:inline-block; background:#e0f2fe; color:#0284c7; border-radius:6px; padding:3px 10px; font-size:0.82rem; font-weight:700; margin-bottom:16px; }
+    p { color:#374151; line-height:1.7; margin-bottom:12px; }
+    h3 { color:#0ea5e9; margin:24px 0 10px; font-size:1.05rem; border-left:4px solid #0ea5e9; padding-left:10px; }
+    ul { color:#334155; padding-left:20px; }
+    ul li { list-style:disc; line-height:1.8; }
+    .how-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin:12px 0; }
+    .step { background:#f0f9ff; border-radius:10px; padding:14px 16px; font-size:0.9rem; color:#0f172a; }
+    .step strong { display:block; color:#0284c7; margin-bottom:4px; font-size:0.82rem; text-transform:uppercase; letter-spacing:0.4px; }
+    .cta { display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; }
+    .cta a { padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:700; }
+    .btn-main { background:#0ea5e9; color:#fff; }
+    .btn-back { background:transparent; color:#0f172a; border:1px solid #e2e8f0; } }@media (max-width:600px){.card{padding:22px 18px;}.cta{flex-direction:column;}.cta a{text-align:center;width:100%;}.how-grid{grid-template-columns:1fr 1fr;}h1{font-size:1.5rem;}}@media (max-width:400px){.how-grid{grid-template-columns:1fr;}
+    footer { margin-top:32px; color:#94a3b8; font-size:0.87rem; text-align:center; }
+    footer a { color:#cbd5e1; text-decoration:none; margin:0 8px; }
+  </style>
+</head>
+<body>
+<main>
+  <a href="index.html" class="back">← 돌아가기</a>
+
+  <div class="card">
+    <span class="badge">🔢 숫자 게임</span>
+    <h1>Number Game</h1>
+    <p>간단하고 직관적인 숫자 추측 게임입니다. 주어진 범위 내에서 컴퓨터가 정한 숫자를 맞히며 점수를 획득합니다. 힌트를 영리하게 활용해 최소한의 시도로 정답을 찾아내는 것이 핵심입니다. 빠른 판단력과 약간의 운이 요구되는 짧고 즐거운 경험을 제공합니다.</p>
+
+    <h3>게임 방법</h3>
+    <div class="how-grid">
+      <div class="step"><strong>STEP 1</strong>게임을 시작하면 1~100 사이의 숫자가 자동으로 설정됩니다.</div>
+      <div class="step"><strong>STEP 2</strong>숫자를 입력하면 '더 높다' 또는 '더 낮다' 힌트를 받습니다.</div>
+      <div class="step"><strong>STEP 3</strong>힌트를 바탕으로 범위를 좁혀가며 정답을 추측하세요.</div>
+      <div class="step"><strong>STEP 4</strong>시도 횟수가 적을수록 높은 점수를 획득합니다!</div>
+    </div>
+
+    <h3>주요 특징</h3>
+    <ul>
+      <li>빠른 라운드: 한 게임당 단 1~2분 내 완료</li>
+      <li>점수 기록: 최고 점수를 기록하고 자기 자신과 경쟁</li>
+      <li>난이도 조절: 숫자 범위와 시도 횟수 제한 설정 가능</li>
+      <li>단순한 UI: 처음 사용자도 설명 없이 즉시 플레이 가능</li>
+      <li>모바일 친화적: 스마트폰에서도 편하게 즐길 수 있는 반응형 디자인</li>
+    </ul>
+
+    <h3>이런 분께 추천</h3>
+    <ul>
+      <li>짧은 시간에 두뇌를 자극하고 싶은 분</li>
+      <li>이분 탐색(Binary Search) 알고리즘을 재미있게 익히고 싶은 분</li>
+      <li>친구 또는 가족과 점수 경쟁을 원하는 분</li>
+    </ul>
+
+    <div class="cta">
+      <a href="https://godsaeng.streamlit.app/Number_Game" class="btn-main">🚀 실행하기 (Streamlit)</a>
+      <a href="index.html" class="btn-back">소개로 돌아가기</a>
+    </div>
+  </div>
+
+  <footer>
+    이 페이지는 설명용입니다. 실제 앱은 Streamlit으로 배포되어 있습니다.<br>
+    <a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용약관</a>
+  </footer>
+</main>
+</body>
+</html>
