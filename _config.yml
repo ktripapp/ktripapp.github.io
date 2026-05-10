@@ -1,0 +1,7 @@
+title: ktripapp
+description: "ktripapp 블로그"
+baseurl: ""
+url: "https://ktripapp.github.io"
+theme: minima
+plugins:
+  - jekyll-feed
