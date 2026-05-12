@@ -96,6 +96,8 @@
         const base = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? API_LOCAL : API_PROD;
         const endpoint = `${base}/api/historical_daily_data`;
         const statusEl = document.getElementById('chart-desc');
+        function setStatusText(t){ if(statusEl) try{ statusEl.textContent = t; }catch(e){ console.warn('setStatusText failed', e); } else console.warn('statusEl not found:', t); }
+        function setStatusHTML(h){ if(statusEl) try{ statusEl.innerHTML = h; }catch(e){ console.warn('setStatusHTML failed', e); } else console.warn('statusEl not found (html)'); }
         const ohlcBar  = document.getElementById('ohlcBar');
         const startInput = document.getElementById('startDate');
         const endInput   = document.getElementById('endDate');
@@ -192,7 +194,7 @@
 
         async function loadChartData(){
           try{
-            statusEl.textContent = '데이터 로딩 중...';
+            setStatusText('데이터 로딩 중...');
             const resp = await fetch(endpoint + '?t=' + Date.now());
             if(!resp.ok) throw new Error('Network response not ok');
             const raw = await resp.json();
@@ -234,8 +236,8 @@
             }).filter(x => x.date && !isNaN(x.close));
 
             items.sort((a,b) => a.date - b.date);
-            if(items.length === 0){ statusEl.textContent = '데이터가 없습니다.'; return; }
-            statusEl.textContent = '';
+            if(items.length === 0){ setStatusText('데이터가 없습니다.'); return; }
+            setStatusText('');
 
             const allItemsLocal = items;
 
@@ -253,8 +255,8 @@
                 setTimeout(function(){ renderChartFor(itemsToRender); }, 200);
                 return;
               }
-              if(!itemsToRender || itemsToRender.length === 0){
-                statusEl.textContent = '선택한 기간의 데이터가 없습니다.';
+                if(!itemsToRender || itemsToRender.length === 0){
+                setStatusText('선택한 기간의 데이터가 없습니다.');
                 if(window._candleChart)  { try{ window._candleChart.destroy();  }catch(e){} window._candleChart  = null; }
                 return;
               }
@@ -292,7 +294,7 @@
               }));
 
               const canvasC = document.getElementById('historyChart');
-              if(!canvasC){ statusEl.textContent = '차트 요소를 찾을 수 없습니다.'; return; }
+              if(!canvasC){ setStatusText('차트 요소를 찾을 수 없습니다.'); return; }
               const ctxC = canvasC.getContext('2d');
 
               // track latest mouse position over chart canvas for robust tooltip placement
@@ -1071,8 +1073,8 @@
               }
             }catch(e){ console.warn('observer init failed', e); }
 
-          } catch(err){
-            statusEl.innerHTML = `데이터를 불러오지 못했습니다. (${err.message})<br><small style="color:#6b7280">서버가 꺼져 있거나 절전 상태일 수 있습니다. <a href="${endpoint.replace('/api/historical_daily_data', '/api/health')}" target="_blank" style="color:#4f46e5;">서버 상태 확인</a> 후 잠시 뒤 새로고침 해주세요.</small>`;
+            } catch(err){
+            setStatusHTML(`데이터를 불러오지 못했습니다. (${err.message})<br><small style="color:#6b7280">서버가 꺼져 있거나 절전 상태일 수 있습니다. <a href="${endpoint.replace('/api/historical_daily_data', '/api/health')}" target="_blank" style="color:#4f46e5;">서버 상태 확인</a> 후 잠시 뒤 새로고침 해주세요.</small>`);
             console.error(err);
           }
         }
@@ -2861,7 +2863,12 @@
     <script>
       (function(){
         async function fetchPostsList(){
-          // Try index.json first
+          // Production: prefer /posts_index.json
+          try{
+            const r0 = await fetch('/posts_index.json?t=' + Date.now());
+            if(r0.ok){ const js0 = await r0.json(); if(Array.isArray(js0) && js0.length) return js0; }
+          }catch(e){}
+          // Try repo-local index.json next
           try{
             const r = await fetch('/_posts/index.json?t=' + Date.now());
             if(r.ok){ const js = await r.json(); if(Array.isArray(js) && js.length) return js; }
