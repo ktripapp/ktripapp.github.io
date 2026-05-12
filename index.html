@@ -1503,5 +1503,62 @@
       }catch(e){ try{ area.textContent = '최근 게시물을 불러오지 못했습니다.'; }catch(_){ } }
     })();
   </script>
+
+  <!-- Markdown viewer for _posts: intercept clicks and fetch .md, render via marked -->
+  <script>
+    (function(){
+      function loadScript(src, cb){
+        var s = document.createElement('script'); s.src = src; s.async = true;
+        s.onload = function(){ cb && cb(null); };
+        s.onerror = function(){ cb && cb(new Error('load failed')); };
+        document.head.appendChild(s);
+      }
+
+      function createModal(){
+        var overlay = document.createElement('div');
+        overlay.style.position = 'fixed'; overlay.style.left = 0; overlay.style.top = 0; overlay.style.right = 0; overlay.style.bottom = 0;
+        overlay.style.background = 'rgba(2,6,23,0.6)'; overlay.style.zIndex = 100000; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+        var box = document.createElement('div'); box.style.maxWidth = '900px'; box.style.width = '94%'; box.style.maxHeight = '90%'; box.style.overflow = 'auto'; box.style.background = '#fff'; box.style.padding = '18px'; box.style.borderRadius = '8px';
+        var close = document.createElement('button'); close.textContent = '닫기'; close.style.cssText = 'position:absolute;right:18px;top:12px;padding:6px 10px;border-radius:6px;border:none;background:#111;color:#fff;cursor:pointer;';
+        close.addEventListener('click', function(){ document.body.removeChild(overlay); });
+        var content = document.createElement('div'); content.style.color = '#111'; content.style.lineHeight = '1.6';
+        box.appendChild(close); box.appendChild(content); overlay.appendChild(box);
+        return {overlay: overlay, content: content};
+      }
+
+      async function fetchAndShow(mdPath){
+        try{
+          var resp = await fetch(mdPath + '?t=' + Date.now());
+          if(!resp.ok) throw new Error('fetch failed ' + resp.status);
+          var txt = await resp.text();
+          // lazy-load marked
+          var show = function(){
+            try{
+              var html = (window.marked && typeof window.marked.parse === 'function') ? window.marked.parse(txt) : '<pre>' + escapeHtml(txt) + '</pre>';
+              var m = createModal(); m.content.innerHTML = html; document.body.appendChild(m.overlay);
+            }catch(e){ var m = createModal(); m.content.innerHTML = '<pre>'+escapeHtml(txt)+'</pre>'; document.body.appendChild(m.overlay); }
+          };
+          if(!window.marked) loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function(err){ show(); }); else show();
+        }catch(e){ alert('게시글을 불러올 수 없습니다. 콘솔을 확인하세요.'); console.error(e); }
+      }
+
+      function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      document.addEventListener('click', function(ev){
+        try{
+          var a = ev.target.closest && ev.target.closest('a');
+          if(!a) return;
+          var href = a.getAttribute('href') || a.href || '';
+          // handle links to _posts/*.md
+          if(href.indexOf('/_posts/') === 0 || href.match(/\.md(#.*)?$/)){
+            ev.preventDefault();
+            // normalize to absolute path under site root
+            var path = href.split('#')[0];
+            fetchAndShow(path);
+          }
+        }catch(e){}
+      }, false);
+    })();
+  </script>
 </body>
 </html>
