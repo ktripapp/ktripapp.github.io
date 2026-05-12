@@ -1522,12 +1522,22 @@
     <script>
       (function(){
         async function fetchPostsList(){
-          // Try index.json first
+          // Production: try public posts_index.json first (created by generator)
+          try{
+            const isLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+            if(!isLocal){
+              const rj = await fetch('/posts_index.json?t=' + Date.now());
+              if(rj.ok){ const js = await rj.json(); if(Array.isArray(js) && js.length) return js; }
+            }
+          }catch(e){}
+
+          // Try index.json in _posts (local dev fallback)
           try{
             const r = await fetch('/_posts/index.json?t=' + Date.now());
             if(r.ok){ const js = await r.json(); if(Array.isArray(js) && js.length) return js; }
           }catch(e){}
-          // Fallback: fetch directory HTML and parse .md links
+
+          // Fallback: fetch directory HTML and parse .md links (local static server)
           try{
             const r2 = await fetch('/_posts/');
             if(r2.ok){ const txt = await r2.text(); const re = /href\s*=\s*"([^\"]+\.md)"/g; const out = []; let m; while((m = re.exec(txt))){ out.push(m[1].replace(/^\//,'')); } if(out.length) return Array.from(new Set(out)); }
@@ -1543,25 +1553,21 @@
           try{ posts = await fetchPostsList(); }catch(e){ posts = []; }
           if(!posts || !posts.length){ container.innerHTML = '<div style="color:#64748b;padding:8px;text-align:center;">게시물이 없습니다.</div>'; return; }
 
-          // sort by filename assuming YYYY-MM-DD prefix
-          posts = posts.map(p=> p.replace(/^_posts\//,'')).filter(Boolean);
-          posts.sort(); posts = posts.reverse();
-          const top = posts.slice(0,2);
+          // posts may be either an array of objects (from posts_index.json) or filenames from _posts
           container.innerHTML = '';
-          for(const fn of top){
+          let list = posts;
+          if(list.length && typeof list[0] === 'string'){
+            // filenames -> convert to objects with url pointing to /_posts/
+            list = list.map(fn => ({ title: fn.replace(/^_posts\//,''), url: '/_posts/' + fn }));
+          }
+          // sort by date field if present, else keep order
+          list.sort((a,b)=> (b.date || '').localeCompare(a.date || '') );
+          const top = list.slice(0,2);
+          for(const it of top){
             const a = document.createElement('a');
-            a.href = '/_posts/' + fn;
+            a.href = it.url || ('/_posts/' + (it.replace ? it : ''));
             a.style.display = 'block'; a.style.padding = '8px'; a.style.borderBottom = '1px dashed #f1f5f9'; a.style.color = '#0f172a'; a.style.textDecoration = 'none';
-            // fetch file to extract title
-            try{
-              const r = await fetch('/_posts/' + fn + '?t=' + Date.now());
-              if(r.ok){ const txt = await r.text();
-                // YAML front-matter title
-                const m = txt.match(/(?:^|\n)title:\s*"?([^\n\"]+)"?/i);
-                const h = txt.match(/(?:^|\n)#\s+(.+)/m);
-                a.textContent = m ? m[1].trim() : (h ? h[1].trim() : fn.replace(/^_posts\//,''));
-              } else { a.textContent = fn.replace(/^_posts\//,''); }
-            }catch(e){ a.textContent = fn.replace(/^_posts\//,''); }
+            a.textContent = it.title || (typeof it === 'string' ? it : (it.url || '').replace(/^.*\//,''));
             container.appendChild(a);
           }
         }
