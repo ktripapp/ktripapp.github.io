@@ -6,7 +6,7 @@
   <meta name="google-adsense-account" content="ca-pub-8900421212808751">
   <meta name="description" content="Godsaeng — 숫자 게임, 퀴즈, 오목 빙고, MBTI 테스트까지 다양한 웹 미니 게임을 한 곳에서 즐기세요." />
   <title>케이트립 갓생 플랫폼</title>
-  <link rel="icon" href="image/Cat.png" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext x='0' y='14' font-size='16'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8900421212808751" crossorigin="anonymous"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -287,28 +287,15 @@
           <canvas id="historyChart" style="width:100%;display:block;"></canvas>
         </div>
 
-        <!-- Trading controls: 주문 입력 / 오더북 / 포지션 -->
-        <div id="tradingControls" style="display:flex;gap:12px;align-items:center;padding:12px;border-top:1px dashed #eef2f7;background:#fcfcff;flex-wrap:wrap;">
-          <div id="tradingNotice" style="width:100%;text-align:center;padding:8px 12px;border-radius:8px;background:#fff7ed;color:#92400e;border:1px solid #fcd34d;margin-bottom:6px;font-weight:700;">
-            안내: 보안으로 인해 현재는 차트 분석만 지원하고, 아래 BUY/SELL은 재미 용도입니다.
+        <!-- 최근 게시물: 거래 UI 제거 후 최신 2건을 클라이언트에서 불러와 표시합니다 -->
+        <div id="latestPosts" style="display:flex;flex-direction:column;gap:8px;padding:12px;border-top:1px dashed #eef2f7;background:#fcfcff;flex-wrap:wrap;">
+          <div style="width:100%;text-align:center;padding:8px 12px;border-radius:8px;background:#fff7ed;color:#92400e;border:1px solid #fcd34d;margin-bottom:6px;font-weight:700;">
+            최근 게시물
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <label style="font-weight:700;color:#374151">수량</label>
-            <input id="tradeQty" type="number" min="0.0001" step="0.0001" value="0.001" style="width:110px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
-            <label style="font-weight:700;color:#374151">가격(지정가)</label>
-            <input id="tradePrice" type="number" step="0.01" placeholder="지정가 (빈값=시장가)" style="width:160px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
+          <div id="recentPostsList" style="display:flex;flex-direction:column;gap:8px;padding:8px;background:#fff;border-radius:8px;border:1px solid #f1f5f9;">
+            <div style="color:#64748b;padding:8px;text-align:center;">불러오는 중...</div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button id="btnMarketBuy" style="background:#16a34a;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Buy</button>
-            <button id="btnMarketSell" style="background:#dc2626;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Sell</button>
-            <button id="btnLimitBuy" style="background:#34d399;color:#072;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Buy</button>
-            <button id="btnLimitSell" style="background:#fb7185;color:#700;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Sell</button>
-          </div>
-          <div id="tradingPanel" style="margin-left:auto;min-width:260px;max-width:42%;background:#fff;border-radius:8px;padding:10px;border:1px solid #f1f5f9;">
-            <div style="font-weight:800;margin-bottom:8px;color:#374151">오더북 / 포지션</div>
-            <div id="ordersList" style="font-size:0.92rem;color:#374151;max-height:140px;overflow:auto;">(주문 없음)</div>
-            <div id="positionsSummary" style="margin-top:8px;font-size:0.92rem;color:#374151;">(포지션 없음)</div>
-          </div>
+          <div style="text-align:right;margin-top:6px;"><a href="/_posts/" style="font-weight:700;color:#4f46e5;text-decoration:none;">모든 글 보기 →</a></div>
         </div>
         <!-- indicatorContainer removed: indicators are now overlaid directly on the main candlestick chart -->
       </div>
@@ -1475,10 +1462,14 @@
           }
 
           // wire UI
-          document.getElementById('btnMarketBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('buy', q); });
-          document.getElementById('btnMarketSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('sell', q); });
-          document.getElementById('btnLimitBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('buy', q, p); });
-          document.getElementById('btnLimitSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('sell', q, p); });
+          const _btnMarketBuy = document.getElementById('btnMarketBuy');
+          if(_btnMarketBuy) _btnMarketBuy.addEventListener('click', ()=>{ const qEl = document.getElementById('tradeQty'); const q = qEl ? Number(qEl.value) || 0 : 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('buy', q); });
+          const _btnMarketSell = document.getElementById('btnMarketSell');
+          if(_btnMarketSell) _btnMarketSell.addEventListener('click', ()=>{ const qEl = document.getElementById('tradeQty'); const q = qEl ? Number(qEl.value) || 0 : 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('sell', q); });
+          const _btnLimitBuy = document.getElementById('btnLimitBuy');
+          if(_btnLimitBuy) _btnLimitBuy.addEventListener('click', ()=>{ const qEl = document.getElementById('tradeQty'); const pEl = document.getElementById('tradePrice'); const q = qEl ? Number(qEl.value) || 0 : 0; const p = pEl ? Number(pEl.value) : NaN; if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('buy', q, p); });
+          const _btnLimitSell = document.getElementById('btnLimitSell');
+          if(_btnLimitSell) _btnLimitSell.addEventListener('click', ()=>{ const qEl = document.getElementById('tradeQty'); const pEl = document.getElementById('tradePrice'); const q = qEl ? Number(qEl.value) || 0 : 0; const p = pEl ? Number(pEl.value) : NaN; if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('sell', q, p); });
 
           // click on a marker to cancel (nearest, intersect)
           document.getElementById('historyChart').addEventListener('click', (ev)=>{
@@ -1525,6 +1516,57 @@
               window.ensureChartAndPlugins().then(function(){ try{ loadChartData(); }catch(e){ console.warn(e); } }).catch(function(){ try{ loadChartData(); }catch(e){} });
             } else { try{ loadChartData(); }catch(e){ console.warn(e); } }
           })();
+    </script>
+
+    <script>
+      (function(){
+        async function fetchPostsList(){
+          // Try index.json first
+          try{
+            const r = await fetch('/_posts/index.json?t=' + Date.now());
+            if(r.ok){ const js = await r.json(); if(Array.isArray(js) && js.length) return js; }
+          }catch(e){}
+          // Fallback: fetch directory HTML and parse .md links
+          try{
+            const r2 = await fetch('/_posts/');
+            if(r2.ok){ const txt = await r2.text(); const re = /href\s*=\s*"([^\"]+\.md)"/g; const out = []; let m; while((m = re.exec(txt))){ out.push(m[1].replace(/^\//,'')); } if(out.length) return Array.from(new Set(out)); }
+          }catch(e){}
+          return [];
+        }
+
+        async function loadAndRenderLatest(){
+          const container = document.getElementById('recentPostsList');
+          if(!container) return;
+          container.innerHTML = '<div style="color:#64748b;padding:8px;text-align:center;">불러오는 중...</div>';
+          let posts = [];
+          try{ posts = await fetchPostsList(); }catch(e){ posts = []; }
+          if(!posts || !posts.length){ container.innerHTML = '<div style="color:#64748b;padding:8px;text-align:center;">게시물이 없습니다.</div>'; return; }
+
+          // sort by filename assuming YYYY-MM-DD prefix
+          posts = posts.map(p=> p.replace(/^_posts\//,'')).filter(Boolean);
+          posts.sort(); posts = posts.reverse();
+          const top = posts.slice(0,2);
+          container.innerHTML = '';
+          for(const fn of top){
+            const a = document.createElement('a');
+            a.href = '/' + fn;
+            a.style.display = 'block'; a.style.padding = '8px'; a.style.borderBottom = '1px dashed #f1f5f9'; a.style.color = '#0f172a'; a.style.textDecoration = 'none';
+            // fetch file to extract title
+            try{
+              const r = await fetch('/' + fn + '?t=' + Date.now());
+              if(r.ok){ const txt = await r.text();
+                // YAML front-matter title
+                const m = txt.match(/(?:^|\n)title:\s*"?([^\n\"]+)"?/i);
+                const h = txt.match(/(?:^|\n)#\s+(.+)/m);
+                a.textContent = m ? m[1].trim() : (h ? h[1].trim() : fn.replace(/^_posts\//,''));
+              } else { a.textContent = fn.replace(/^_posts\//,''); }
+            }catch(e){ a.textContent = fn.replace(/^_posts\//,''); }
+            container.appendChild(a);
+          }
+        }
+
+        setTimeout(loadAndRenderLatest, 200);
+      })();
     </script>
 
     <!-- GAME DETAIL CARDS -->
