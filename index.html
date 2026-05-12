@@ -1484,7 +1484,18 @@
 
         const recent = items.slice(0,2);
         area.innerHTML = recent.map(it=>{
-          const link = it.url || ('/_posts/' + (it.filename || ''));
+          let link = it.url || ('/_posts/' + (it.filename || ''));
+          // If the URL looks like a Jekyll permalink /YYYY/MM/DD/slug.html,
+          // convert to a local _posts filename fallback: YYYY-MM-DD-slug.md
+          try{
+            const m = String(link).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)\.html$/);
+            if(m){
+              const year = m[1], mon = m[2], day = m[3], slug = decodeURIComponent(m[4]);
+              const filename = `${year}-${mon}-${day}-${slug}.md`;
+              // prefer the _posts path so the static server can serve the raw markdown
+              link = '/_posts/' + filename;
+            }
+          }catch(e){}
           const title = (it.title || (link.split('/').pop() || '')).replace(/[-_]/g,' ');
           const dateHtml = it.date ? `<div style="color:#6b7280;font-size:0.85rem;margin-top:2px;">${(new Date(it.date)).toISOString().slice(0,10)}</div>` : '';
           return `<div style="margin-bottom:8px;"><a href="${link}" style="color:#4f46e5;text-decoration:none;font-weight:700;">${title}</a>${dateHtml}</div>`;
