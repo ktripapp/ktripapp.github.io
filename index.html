@@ -1514,10 +1514,12 @@
           // If the URL looks like a Jekyll permalink /YYYY/MM/DD/slug.html,
           // convert to a local _posts filename fallback: YYYY-MM-DD-slug.md
           try{
-            const m = String(link).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)\.html$/);
+            const m = String(link).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)(?:\.html)?\/?$/);
             if(m){
               const year = m[1], mon = m[2], day = m[3], slug = decodeURIComponent(m[4]);
-              const filename = `${year}-${mon}-${day}-${slug}.md`;
+              // sanitize slug: remove trailing slash/empty and replace spaces with '-'
+              const cleanSlug = String(slug).replace(/\/+$/,'').replace(/\s+/g,'-');
+              const filename = `${year}-${mon}-${day}-${cleanSlug}.md`;
               // prefer the _posts path so the static server can serve the raw markdown
               link = '/_posts/' + filename;
             }
@@ -1552,19 +1554,62 @@
         return {overlay: overlay, content: content};
       }
 
-      async function fetchAndShow(mdPath){
+      async function fetchAndShow(path){
         try{
-          var resp = await fetch(mdPath + '?t=' + Date.now());
-          if(!resp.ok) throw new Error('fetch failed ' + resp.status);
-          var txt = await resp.text();
-          // lazy-load marked
-          var show = function(){
-            try{
-              var html = (window.marked && typeof window.marked.parse === 'function') ? window.marked.parse(txt) : '<pre>' + escapeHtml(txt) + '</pre>';
+          var resp = await fetch(path + '?t=' + Date.now());
+          var txt = null;
+          if(!resp.ok){
+            // If permalink on static server returns 404, try fallback to raw _posts markdown
+            var pm = String(path).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/([^\/]+)\/?$/);
+            if(pm){
+              try{
+                  var year = pm[1], mon = pm[2], day = pm[3], slug = decodeURIComponent(pm[4]);
+                  var filename = `${year}-${mon}-${day}-${slug}.md`;
+                  // try multiple candidate locations so local static server root differences are handled
+                  var baseDir = window.location.pathname.replace(/\/[^\/]*$/, '/');
+                  var candidates = [
+                    '/_posts/' + filename,
+                    baseDir + '_posts/' + filename,
+                    '/ktripapp.github.io/_posts/' + filename,
+                    './_posts/' + filename
+                  ];
+                  var found = false;
+                  for(var i=0;i<candidates.length;i++){
+                    try{
+                      var url = candidates[i] + '?t=' + Date.now();
+                      var resp2 = await fetch(url);
+                      if(resp2.ok){ txt = await resp2.text(); path = candidates[i]; found = true; break; }
+                    }catch(_){ }
+                  }
+                  if(!found) throw new Error('fallback fetch failed');
+                }catch(err){ throw new Error('fetch failed ' + (resp.status||'') + ' and no fallback: ' + err.message); }
+            }else{
+              throw new Error('fetch failed ' + resp.status);
+            }
+          } else {
+            txt = await resp.text();
+          }
+          var html = '';
+          var isMarkdown = /\.md(#[^\s]*)?$/.test(path) || txt.trim().startsWith('---');
+          if(isMarkdown){
+            // ensure marked is available
+            var show = function(){
+              try{ html = (window.marked && typeof window.marked.parse === 'function') ? window.marked.parse(txt) : '<pre>' + escapeHtml(txt) + '</pre>'; }
+              catch(e){ html = '<pre>' + escapeHtml(txt) + '</pre>'; }
               var m = createModal(); m.content.innerHTML = html; document.body.appendChild(m.overlay);
-            }catch(e){ var m = createModal(); m.content.innerHTML = '<pre>'+escapeHtml(txt)+'</pre>'; document.body.appendChild(m.overlay); }
-          };
-          if(!window.marked) loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function(err){ show(); }); else show();
+            };
+            if(!window.marked) loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function(){ show(); }); else show();
+            return;
+          }
+
+          // If HTML returned (permalink), try to extract article/main content for modal
+          var m = txt.match(/<article[\s\S]*?>([\s\S]*?)<\/article>/i);
+          if(m && m[1]) html = m[1];
+          else {
+            m = txt.match(/<main[\s\S]*?>([\s\S]*?)<\/main>/i);
+            html = (m && m[1]) ? m[1] : txt;
+          }
+          var modal = createModal(); modal.content.innerHTML = html; document.body.appendChild(modal.overlay);
         }catch(e){ alert('게시글을 불러올 수 없습니다. 콘솔을 확인하세요.'); console.error(e); }
       }
 
@@ -1575,10 +1620,9 @@
           var a = ev.target.closest && ev.target.closest('a');
           if(!a) return;
           var href = a.getAttribute('href') || a.href || '';
-          // handle links to _posts/*.md
-          if(href.indexOf('/_posts/') === 0 || href.match(/\.md(#.*)?$/)){
+          // handle links to _posts/*.md OR Jekyll permalinks like /YYYY/MM/DD/slug/
+          if(href.indexOf('/_posts/') === 0 || href.match(/\.md(#.*)?$/) || href.match(/^\/\d{4}\/\d{2}\/\d{2}\/[^\s]+\/?$/)){
             ev.preventDefault();
-            // normalize to absolute path under site root
             var path = href.split('#')[0];
             fetchAndShow(path);
           }
