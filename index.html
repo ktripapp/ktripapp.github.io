@@ -1568,9 +1568,13 @@
                   // try multiple candidate locations so local static server root differences are handled
                   var baseDir = window.location.pathname.replace(/\/[^\/]*$/, '/');
                   var candidates = [
+                    '/posts/' + filename,
                     '/_posts/' + filename,
+                    baseDir + 'posts/' + filename,
                     baseDir + '_posts/' + filename,
+                    '/ktripapp.github.io/posts/' + filename,
                     '/ktripapp.github.io/_posts/' + filename,
+                    './posts/' + filename,
                     './_posts/' + filename
                   ];
                   var found = false;
