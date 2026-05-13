@@ -277,7 +277,7 @@
     <section id="chart-section" class="intro-section" style="margin-top:6px;">
       <p id="chart-desc" style="color:#6b7280;margin-bottom:10px;text-align:left;">데이터를 불러오는 중입니다...</p>
       <div style="background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(15,23,42,0.06);overflow:hidden;">
-        <div id="indicatorControls" style="padding:8px 12px;background:#fff;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          <div id="indicatorControls" style="padding:8px 12px;background:#fff;border-bottom:1px solid #f1f5f9;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           <span style="font-weight:700;color:#64748b;">지표 표시:</span>
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_onchain_mvrv" style="margin-right:6px;">MVRV</label>
           <label style="font-weight:600;color:#374151;"> <input type="checkbox" id="cb_etf_ibit" style="margin-right:6px;">ETF(IBIT)</label>
@@ -287,28 +287,10 @@
           <canvas id="historyChart" style="width:100%;display:block;"></canvas>
         </div>
 
-        <!-- Trading controls: 주문 입력 / 오더북 / 포지션 -->
-        <div id="tradingControls" style="display:flex;gap:12px;align-items:center;padding:12px;border-top:1px dashed #eef2f7;background:#fcfcff;flex-wrap:wrap;">
-          <div id="tradingNotice" style="width:100%;text-align:center;padding:8px 12px;border-radius:8px;background:#fff7ed;color:#92400e;border:1px solid #fcd34d;margin-bottom:6px;font-weight:700;">
-            안내: 보안으로 인해 현재는 차트 분석만 지원하고, 아래 BUY/SELL은 재미 용도입니다.
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <label style="font-weight:700;color:#374151">수량</label>
-            <input id="tradeQty" type="number" min="0.0001" step="0.0001" value="0.001" style="width:110px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
-            <label style="font-weight:700;color:#374151">가격(지정가)</label>
-            <input id="tradePrice" type="number" step="0.01" placeholder="지정가 (빈값=시장가)" style="width:160px;padding:6px;border-radius:6px;border:1px solid #e5e7eb;" />
-          </div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button id="btnMarketBuy" style="background:#16a34a;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Buy</button>
-            <button id="btnMarketSell" style="background:#dc2626;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Market Sell</button>
-            <button id="btnLimitBuy" style="background:#34d399;color:#072;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Buy</button>
-            <button id="btnLimitSell" style="background:#fb7185;color:#700;border:none;padding:8px 12px;border-radius:8px;font-weight:700;">Limit Sell</button>
-          </div>
-          <div id="tradingPanel" style="margin-left:auto;min-width:260px;max-width:42%;background:#fff;border-radius:8px;padding:10px;border:1px solid #f1f5f9;">
-            <div style="font-weight:800;margin-bottom:8px;color:#374151">오더북 / 포지션</div>
-            <div id="ordersList" style="font-size:0.92rem;color:#374151;max-height:140px;overflow:auto;">(주문 없음)</div>
-            <div id="positionsSummary" style="margin-top:8px;font-size:0.92rem;color:#374151;">(포지션 없음)</div>
-          </div>
+        <!-- Recent posts (replaces trading controls) -->
+        <div id="recentPostsArea" style="display:block;padding:12px;border-top:1px dashed #eef2f7;background:#fcfcff;">
+          <div style="font-weight:700;color:#374151;margin-bottom:8px;">최근 게시물</div>
+          <div id="recentPostsList" style="font-size:0.95rem;color:#0f172a;">불러오는 중...</div>
         </div>
         <!-- indicatorContainer removed: indicators are now overlaid directly on the main candlestick chart -->
       </div>
@@ -1148,12 +1130,12 @@
               }catch(e){ console.warn('applyRangeFromInputs error', e); }
             }
 
-            applyBtn.addEventListener('click', applyRangeFromInputs);
+            if(applyBtn){ applyBtn.addEventListener('click', applyRangeFromInputs); }
             // reset view (전체) button
             try{
               const resetBtn = document.getElementById('resetRange');
-              if(resetBtn){
-                resetBtn.addEventListener('click', ()=>{ try{ renderChartFor(allItemsLocal); statusEl.textContent = ''; reapplyCheckedIndicators(); }catch(e){ console.warn('resetRange handler failed', e); } });
+                if(resetBtn){
+                resetBtn.addEventListener('click', ()=>{ try{ renderChartFor(allItemsLocal); setStatusText(''); reapplyCheckedIndicators(); }catch(e){ console.warn('resetRange handler failed', e); } });
               }
             }catch(e){ console.warn('resetBtn init failed', e); }
             presets.forEach(p => p.addEventListener('click', ev => {
@@ -1347,6 +1329,7 @@
               });
               // expose mapping for tooltip/date lookups
               window._indicatorMapping = mapping;
+              
             })();
 
             // Observe container to auto-recover chart if canvas is removed or collapsed
@@ -1371,155 +1354,9 @@
           }
         }
 
-        // ----- Trading / simulated orders support -----
-        (function(){
-          window._tradingOrders = window._tradingOrders || [];
-          window._tradingPositions = window._tradingPositions || { netQty:0, avgPrice:0 };
-
-          function nextOrderId(){ return 'o' + Math.floor(Math.random()*1e9).toString(36); }
-
-          function updateTradingPanel(){
-            const ordersEl = document.getElementById('ordersList');
-            const posEl = document.getElementById('positionsSummary');
-            if(!ordersEl || !posEl) return;
-            if(!(window._tradingOrders && window._tradingOrders.length)) ordersEl.innerHTML = '<small style="color:#94a3b8;">(주문 없음)</small>';
-            else{
-              ordersEl.innerHTML = window._tradingOrders.map(o=>{
-                const st = o.side === 'buy' ? '<strong style="color:#166534">BUY</strong>' : '<strong style="color:#991b1b">SELL</strong>';
-                const status = o.filled ? '<span style="color:#06b6d4">체결</span>' : '<span style="color:#fb923c">대기</span>';
-                const priceText = o.price!=null ? Number(o.price).toLocaleString() : '(MKT)';
-                return `<div style="padding:6px 0;border-bottom:1px dashed #f1f5f9">${st} ${o.qty} @ ${priceText} <span style="float:right">${status} <button data-id="${o.id}" class="cancelOrder" style="margin-left:8px;padding:2px 6px;border-radius:6px;border:1px solid #eee;background:#fff">취소</button></span></div>`;
-              }).join('');
-            }
-            // positions summary
-            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
-            if(!pos || !pos.netQty){ posEl.innerHTML = '<small style="color:#94a3b8;">(포지션 없음)</small>'; }
-            else{
-              const side = pos.netQty > 0 ? 'Long' : 'Short';
-              posEl.innerHTML = `<div><strong>${side}</strong> ${Math.abs(pos.netQty)} @ avg ${Number(pos.avgPrice).toLocaleString()}</div><div id="posPnl">Unrealized: -</div>`;
-            }
-            // attach cancel handlers
-            Array.from(document.querySelectorAll('#ordersList .cancelOrder')).forEach(btn=> btn.addEventListener('click', ev=>{
-              const id = btn.getAttribute('data-id'); window._tradingOrders = (window._tradingOrders||[]).filter(x=> x.id !== id); updateTradingPanel(); try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
-            }));
-          }
-
-          function placeMarket(side, qty){
-            try{
-              const last = (window._lastRenderData && window._lastRenderData.length) ? window._lastRenderData[window._lastRenderData.length-1] : null;
-              if(!last) return alert('차트 데이터가 없습니다.');
-              const price = last.close;
-              const o = { id: nextOrderId(), type:'market', side, qty: Number(qty), price, filled:true, timeMs: last.date.getTime() };
-              window._tradingOrders = window._tradingOrders || [];
-              window._tradingOrders.push(o);
-              applyFillToPositions(o);
-              updateTradingPanel();
-              try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
-            }catch(e){ console.error(e); }
-          }
-
-          function placeLimit(side, qty, price){
-            const id = nextOrderId();
-            const o = { id, type:'limit', side, qty: Number(qty), price: Number(price), filled:false, timeMs: Date.now() };
-            window._tradingOrders = window._tradingOrders || [];
-            window._tradingOrders.push(o);
-            updateTradingPanel();
-            try{ if(window._candleChart) window._candleChart.update(); }catch(e){}
-          }
-
-          function tryFillLimitOrders(){
-            if(!(window._tradingOrders && window._tradingOrders.length && window._lastRenderData && window._lastRenderData.length)) return;
-            const last = window._lastRenderData[window._lastRenderData.length-1];
-            const lastClose = last.close;
-            let changed = false;
-            window._tradingOrders.forEach(o=>{
-              if(o.filled) return;
-              if(o.side === 'buy' && lastClose <= o.price){ o.filled = true; o.fillTimeMs = last.date.getTime(); applyFillToPositions(o); changed = true; }
-              if(o.side === 'sell' && lastClose >= o.price){ o.filled = true; o.fillTimeMs = last.date.getTime(); applyFillToPositions(o); changed = true; }
-            });
-            if(changed){ updateTradingPanel(); try{ if(window._candleChart) window._candleChart.update(); }catch(e){} }
-          }
-
-          function applyFillToPositions(order){
-            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
-            const sideSign = order.side === 'buy' ? 1 : -1;
-            const qty = Number(order.qty) * sideSign;
-            // calc new avgPrice for net position (simple weighted avg)
-            const newNet = (pos.netQty || 0) + qty;
-            if(pos.netQty === 0){ // opening
-              pos.avgPrice = order.price; pos.netQty = qty;
-            } else if((pos.netQty > 0 && newNet > 0) || (pos.netQty < 0 && newNet < 0)){ // increasing same direction
-              pos.avgPrice = ((pos.avgPrice * Math.abs(pos.netQty)) + (order.price * Math.abs(qty))) / (Math.abs(pos.netQty) + Math.abs(qty));
-              pos.netQty = newNet;
-            } else { // reducing or flipping
-              // simple approach: if crossing zero, compute remaining qty and set avg to order.price for new side
-              if(Math.sign(pos.netQty) !== Math.sign(newNet) && newNet !== 0){ // flipped
-                pos.avgPrice = order.price; pos.netQty = newNet;
-              } else if(newNet === 0){ pos.avgPrice = 0; pos.netQty = 0; }
-              else { pos.netQty = newNet; }
-            }
-            window._tradingPositions = pos;
-            updatePnlDisplay();
-          }
-
-          function updatePnlDisplay(){
-            const pnlEl = document.getElementById('posPnl');
-            if(!pnlEl) return;
-            const pos = window._tradingPositions || { netQty:0, avgPrice:0 };
-            if(!pos || !pos.netQty){ pnlEl.innerHTML = '' ; return; }
-            const last = (window._lastRenderData && window._lastRenderData.length) ? window._lastRenderData[window._lastRenderData.length-1] : null;
-            if(!last){ pnlEl.innerHTML = ''; return; }
-            const mark = last.close;
-            const unreal = (mark - pos.avgPrice) * pos.netQty; // signed
-            pnlEl.innerHTML = `Unrealized P&L: <strong>${unreal >= 0 ? '+' : ''}${Number(unreal).toLocaleString()}</strong> (mark ${Number(mark).toLocaleString()})`;
-          }
-
-          // wire UI
-          document.getElementById('btnMarketBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('buy', q); });
-          document.getElementById('btnMarketSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; if(q<=0) return alert('수량을 입력하세요.'); placeMarket('sell', q); });
-          document.getElementById('btnLimitBuy').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('buy', q, p); });
-          document.getElementById('btnLimitSell').addEventListener('click', ()=>{ const q = Number(document.getElementById('tradeQty').value) || 0; const p = Number(document.getElementById('tradePrice').value); if(q<=0||!p) return alert('수량과 지정가를 입력하세요.'); placeLimit('sell', q, p); });
-
-          // click on a marker to cancel (nearest, intersect)
-          document.getElementById('historyChart').addEventListener('click', (ev)=>{
-            try{
-              const chart = window._candleChart; if(!chart) return;
-              const elems = chart.getElementsAtEventForMode(ev, 'nearest', { intersect: true }, true);
-              if(!elems || !elems.length) return;
-              const el = elems[0];
-              const ds = chart.data.datasets[el.datasetIndex];
-              if(!ds || ds.label !== 'Orders') return;
-              const point = ds.data[el.index];
-              // find matching order by time+price
-              const cand = (window._tradingOrders || []).find(o=> Math.abs((o.timeMs || 0) - (point.x || 0)) < 1000 || (o.price === point.y));
-              if(cand && !cand.filled){ if(confirm('이 주문을 취소하시겠습니까?')){ window._tradingOrders = window._tradingOrders.filter(x=> x.id !== cand.id); updateTradingPanel(); chart.update(); } }
-            }catch(e){ console.warn(e); }
-          });
-
-          // expose helper for chart render to include orders and try fills
-          window._attachTradingToDatasets = function(datasets){
-            const orders = window._tradingOrders || [];
-            if(!orders.length) return datasets;
-            const pts = orders.map(o=>({ x: o.fillTimeMs || o.timeMs || Date.now(), y: o.price, id: o.id, side: o.side, filled: !!o.filled }));
-            const bg = orders.map(o=> o.side === 'buy' ? COLOR_UP : COLOR_DOWN);
-            const br = bg;
-            datasets.push({ type:'scatter', label:'Orders', data: pts, pointBackgroundColor: bg, pointBorderColor: br, pointRadius: 7, showLine:false, yAxisID: 'y', order:4 });
-            return datasets;
-          };
-
-          // expose some helpers to outer scope so render logic can call them
-          window.tryFillLimitOrders = tryFillLimitOrders;
-          window.updateTradingPanel = updateTradingPanel;
-          window.updatePnlDisplay = updatePnlDisplay;
-          window.placeMarketOrder = placeMarket;
-          window.placeLimitOrder = placeLimit;
-
-          // call tryFillLimitOrders periodically (after render)
-          setInterval(()=>{ tryFillLimitOrders(); updatePnlDisplay(); }, 2000);
-
-          // initial panel update
-          updateTradingPanel();
-        })();
+        // Trading UI removed: replaced by recent posts block for simpler public view.
+        // The simulated trading module was intentionally removed to avoid
+        // client-side complexity in the public static site preview.
 
             if(window.ensureChartAndPlugins){
               window.ensureChartAndPlugins().then(function(){ try{ loadChartData(); }catch(e){ console.warn(e); } }).catch(function(){ try{ loadChartData(); }catch(e){} });
@@ -1600,5 +1437,154 @@
       <a href="MBTI_Game.html">MBTI Game</a>
     </div>
   </noscript>
+  <script>
+    (async function(){
+      const area = document.getElementById('recentPostsList');
+      if(!area) return;
+      try{
+        area.textContent = '불러오는 중...';
+        const candidates = ['/posts_index.json','/_posts/index.json','/posts.json','/_posts.json'];
+        let list = null;
+        for(const u of candidates){
+          try{
+            const r = await fetch(u + '?t=' + Date.now());
+            if(!r.ok) continue;
+            const js = await r.json();
+            if(js) { list = js; break; }
+          }catch(e){}
+        }
+        if(!list){ area.textContent = '최근 게시물이 없습니다.'; return; }
+
+        // normalize to array of {title, url, date}
+        let items = [];
+        if(Array.isArray(list)){
+          if(list.length && typeof list[0] === 'string'){
+            items = list.map(fn=>{
+              const name = fn.replace(/^\/?_posts\//,'').replace(/^\//,'');
+              const url = '/_posts/' + name;
+              const title = (name.replace(/\.[^/.]+$/,'')).replace(/[-_]/g,' ');
+              return {title, url, date: null};
+            });
+          } else {
+            items = list.map(it=>{
+              const url = it.url || it.path || (it.filename ? '/_posts/' + it.filename : null) || null;
+              const title = it.title || it.name || (it.filename ? it.filename.replace(/\.[^/.]+$/,'') : '');
+              const date = it.date || it.published || it.created || null;
+              return {title, url, date};
+            }).filter(x=> x.url);
+          }
+        } else if(typeof list === 'object'){
+          try{ items = Object.keys(list).map(k=>({ title: list[k].title || k, url: list[k].url || ('/_posts/' + k), date: list[k].date || null })); }catch(e){}
+        }
+
+        if(!items || items.length === 0){ area.textContent = '최근 게시물이 없습니다.'; return; }
+
+        // parse dates and sort by newest
+        items.forEach(i=>{ i._ts = i.date ? (Date.parse(i.date) || null) : null; });
+        items.sort((a,b)=> (b._ts || 0) - (a._ts || 0));
+
+        // If we have fewer than 2 items from the index, try to read the
+        // directory listing under /_posts/ to find raw .md files (works
+        // with simple static servers that expose directory indexes).
+        if(items.length < 2){
+          try{
+            const dirResp = await fetch('/_posts/');
+            if(dirResp.ok){
+              const html = await dirResp.text();
+              const m = [...html.matchAll(/href="([^"]+\.md)"/g)];
+              for(const mm of m){
+                if(items.length >= 2) break;
+                try{
+                  const href = mm[1];
+                  const name = href.split('/').pop();
+                  if(!name || items.some(it=> (it.url||'').endsWith('/' + name))) continue;
+                  items.push({ title: name.replace(/\.md$/,'').replace(/[-_]/g,' '), url: '/_posts/' + name, date: null, _ts: null });
+                }catch(_){ }
+              }
+            }
+          }catch(_){ }
+          // refresh timestamps/sort after adding fallbacks
+          items.forEach(i=>{ i._ts = i.date ? (Date.parse(i.date) || null) : (i._ts || null); });
+          items.sort((a,b)=> (b._ts || 0) - (a._ts || 0));
+        }
+
+        const recent = items.slice(0,2);
+        area.innerHTML = recent.map(it=>{
+          let link = it.url || ('/_posts/' + (it.filename || ''));
+          // If the URL looks like a Jekyll permalink /YYYY/MM/DD/slug.html,
+          // convert to a local _posts filename fallback: YYYY-MM-DD-slug.md
+          try{
+            const m = String(link).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)\.html$/);
+            if(m){
+              const year = m[1], mon = m[2], day = m[3], slug = decodeURIComponent(m[4]);
+              const filename = `${year}-${mon}-${day}-${slug}.md`;
+              // prefer the _posts path so the static server can serve the raw markdown
+              link = '/_posts/' + filename;
+            }
+          }catch(e){}
+          const title = (it.title || (link.split('/').pop() || '')).replace(/[-_]/g,' ');
+          const dateHtml = it.date ? `<div style="color:#6b7280;font-size:0.85rem;margin-top:2px;">${(new Date(it.date)).toISOString().slice(0,10)}</div>` : '';
+          return `<div style="margin-bottom:8px;"><a href="${link}" style="color:#4f46e5;text-decoration:none;font-weight:700;">${title}</a>${dateHtml}</div>`;
+        }).join('');
+      }catch(e){ try{ area.textContent = '최근 게시물을 불러오지 못했습니다.'; }catch(_){ } }
+    })();
+  </script>
+
+  <!-- Markdown viewer for _posts: intercept clicks and fetch .md, render via marked -->
+  <script>
+    (function(){
+      function loadScript(src, cb){
+        var s = document.createElement('script'); s.src = src; s.async = true;
+        s.onload = function(){ cb && cb(null); };
+        s.onerror = function(){ cb && cb(new Error('load failed')); };
+        document.head.appendChild(s);
+      }
+
+      function createModal(){
+        var overlay = document.createElement('div');
+        overlay.style.position = 'fixed'; overlay.style.left = 0; overlay.style.top = 0; overlay.style.right = 0; overlay.style.bottom = 0;
+        overlay.style.background = 'rgba(2,6,23,0.6)'; overlay.style.zIndex = 100000; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+        var box = document.createElement('div'); box.style.maxWidth = '900px'; box.style.width = '94%'; box.style.maxHeight = '90%'; box.style.overflow = 'auto'; box.style.background = '#fff'; box.style.padding = '18px'; box.style.borderRadius = '8px';
+        var close = document.createElement('button'); close.textContent = '닫기'; close.style.cssText = 'position:absolute;right:18px;top:12px;padding:6px 10px;border-radius:6px;border:none;background:#111;color:#fff;cursor:pointer;';
+        close.addEventListener('click', function(){ document.body.removeChild(overlay); });
+        var content = document.createElement('div'); content.style.color = '#111'; content.style.lineHeight = '1.6';
+        box.appendChild(close); box.appendChild(content); overlay.appendChild(box);
+        return {overlay: overlay, content: content};
+      }
+
+      async function fetchAndShow(mdPath){
+        try{
+          var resp = await fetch(mdPath + '?t=' + Date.now());
+          if(!resp.ok) throw new Error('fetch failed ' + resp.status);
+          var txt = await resp.text();
+          // lazy-load marked
+          var show = function(){
+            try{
+              var html = (window.marked && typeof window.marked.parse === 'function') ? window.marked.parse(txt) : '<pre>' + escapeHtml(txt) + '</pre>';
+              var m = createModal(); m.content.innerHTML = html; document.body.appendChild(m.overlay);
+            }catch(e){ var m = createModal(); m.content.innerHTML = '<pre>'+escapeHtml(txt)+'</pre>'; document.body.appendChild(m.overlay); }
+          };
+          if(!window.marked) loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', function(err){ show(); }); else show();
+        }catch(e){ alert('게시글을 불러올 수 없습니다. 콘솔을 확인하세요.'); console.error(e); }
+      }
+
+      function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+      document.addEventListener('click', function(ev){
+        try{
+          var a = ev.target.closest && ev.target.closest('a');
+          if(!a) return;
+          var href = a.getAttribute('href') || a.href || '';
+          // handle links to _posts/*.md
+          if(href.indexOf('/_posts/') === 0 || href.match(/\.md(#.*)?$/)){
+            ev.preventDefault();
+            // normalize to absolute path under site root
+            var path = href.split('#')[0];
+            fetchAndShow(path);
+          }
+        }catch(e){}
+      }, false);
+    })();
+  </script>
 </body>
 </html>
