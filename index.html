@@ -1464,10 +1464,12 @@
               const url = '/_posts/' + name;
               const title = (name.replace(/\.[^/.]+$/,'')).replace(/[-_]/g,' ');
               return {title, url, date: null};
-            });
+            })
           } else {
             items = list.map(it=>{
-              const url = it.url || it.path || (it.filename ? '/_posts/' + it.filename : null) || null;
+              var url = it.url || it.path || (it.filename ? '/_posts/' + it.filename : null) || null;
+              // Normalize common repo-based URLs to _posts so local static servers can serve raw markdown
+              try{ url = String(url).replace(/^\/(?:ktripapp.github.io\/)?posts\//, '/_posts/'); }catch(e){}
               const title = it.title || it.name || (it.filename ? it.filename.replace(/\.[^/.]+$/,'') : '');
               const date = it.date || it.published || it.created || null;
               return {title, url, date};
@@ -1567,16 +1569,25 @@
                   var filename = `${year}-${mon}-${day}-${slug}.md`;
                   // try multiple candidate locations so local static server root differences are handled
                   var baseDir = window.location.pathname.replace(/\/[^\/]*$/, '/');
-                  var candidates = [
-                    '/posts/' + filename,
+                  // Build a robust list of candidate locations for raw markdown files.
+                  // Try directory-relative and several common roots so the fallback
+                  // works whether the site is served from repo root, a subpath
+                  // (e.g. /ktripapp.github.io/) or locally via a simple static server.
+                  var roots = [ baseDir, '/', '/ktripapp.github.io/', './' ];
+                  var candidates = [];
+                  roots.forEach(function(r){
+                    var root = r || '/';
+                    if(!root.endsWith('/')) root = root + '/';
+                    candidates.push(root + '_posts/' + filename);
+                    candidates.push(root + 'posts/' + filename);
+                  });
+                  // Add a few absolute/relative fallbacks (de-duplicated later by fetch loop)
+                  candidates = candidates.concat([
                     '/_posts/' + filename,
-                    baseDir + 'posts/' + filename,
-                    baseDir + '_posts/' + filename,
-                    '/ktripapp.github.io/posts/' + filename,
-                    '/ktripapp.github.io/_posts/' + filename,
-                    './posts/' + filename,
-                    './_posts/' + filename
-                  ];
+                    '/posts/' + filename,
+                    './_posts/' + filename,
+                    './posts/' + filename
+                  ]);
                   var found = false;
                   for(var i=0;i<candidates.length;i++){
                     try{
