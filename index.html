@@ -1480,7 +1480,7 @@
                 url = url.replace(/^\/(?:ktripapp.github.io\/)?posts\//, '/_posts/');
                 const markdownMatch = url.match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
                 if(markdownMatch){
-                  url = `/${markdownMatch[1]}/${markdownMatch[2]}/${markdownMatch[3]}/${markdownMatch[4]}/`;
+                  url = `/${markdownMatch[1]}/${markdownMatch[2]}/${markdownMatch[3]}/${markdownMatch[4]}.html`;
                 }
               }catch(e){}
               return {title, url, date};
@@ -1529,7 +1529,7 @@
             const m = String(link).match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
             if(m){
               const year = m[1], mon = m[2], day = m[3], slug = m[4];
-              link = `/${year}/${mon}/${day}/${slug}/`;
+              link = `/${year}/${mon}/${day}/${slug}.html`;
             }
           }catch(e){}
           const title = (it.title || (link.split('/').pop() || '')).replace(/[-_]/g,' ');
