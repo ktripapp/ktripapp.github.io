@@ -1528,7 +1528,7 @@
           try{
             const m = String(link).match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
             if(m){
-              const year = m[1], mon = m[2], day = m[3], slug = decodeURIComponent(m[4]);
+              const year = m[1], mon = m[2], day = m[3], slug = m[4];
               link = `/${year}/${mon}/${day}/${slug}/`;
             }
           }catch(e){}
