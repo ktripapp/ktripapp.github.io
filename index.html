@@ -1478,9 +1478,9 @@
                 const abs = new URL(url, window.location.origin);
                 if(abs.origin === window.location.origin) url = abs.pathname;
                 url = url.replace(/^\/(?:ktripapp.github.io\/)?posts\//, '/_posts/');
-                const md = url.match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
-                if(md){
-                  url = `/${md[1]}/${md[2]}/${md[3]}/${md[4]}/`;
+                const markdownMatch = url.match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
+                if(markdownMatch){
+                  url = `/${markdownMatch[1]}/${markdownMatch[2]}/${markdownMatch[3]}/${markdownMatch[4]}/`;
                 }
               }catch(e){}
               return {title, url, date};
