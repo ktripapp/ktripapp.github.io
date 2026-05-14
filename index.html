@@ -1471,9 +1471,9 @@
               // Normalize common repo-based URLs to _posts so local static servers can serve raw markdown
               try{
                 const abs = new URL(String(url), window.location.origin);
-                if(abs && abs.origin === window.location.origin) url = abs.pathname;
+                if(abs.origin === window.location.origin) url = abs.pathname;
                 url = String(url).replace(/^\/(?:ktripapp.github.io\/)?posts\//, '/_posts/');
-                const md = String(url).match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-(.+)\.md$/);
+                const md = String(url).match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
                 if(md){
                   url = `/${md[1]}/${md[2]}/${md[3]}/${md[4]}/`;
                 }
