@@ -1468,21 +1468,21 @@
           } else {
             items = list.map(it=>{
               var url = it.url || it.path || (it.filename ? '/_posts/' + it.filename : null) || null;
+              const title = it.title || it.name || (it.filename ? it.filename.replace(/\.[^/.]+$/,'') : '');
+              const date = it.date || it.published || it.created || null;
+              if(url == null) return {title, url: null, date};
+              url = String(url).trim();
+              if(!url) return {title, url: null, date};
               // Normalize common repo-based URLs to _posts so local static servers can serve raw markdown
               try{
-                if(url == null) throw new Error('missing url');
-                url = String(url).trim();
-                if(!url) throw new Error('empty url');
                 const abs = new URL(url, window.location.origin);
                 if(abs.origin === window.location.origin) url = abs.pathname;
                 url = url.replace(/^\/(?:ktripapp.github.io\/)?posts\//, '/_posts/');
-                const md = url.match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+?)\.md$/);
+                const md = url.match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
                 if(md){
                   url = `/${md[1]}/${md[2]}/${md[3]}/${md[4]}/`;
                 }
               }catch(e){}
-              const title = it.title || it.name || (it.filename ? it.filename.replace(/\.[^/.]+$/,'') : '');
-              const date = it.date || it.published || it.created || null;
               return {title, url, date};
             }).filter(x=> x.url);
           }
