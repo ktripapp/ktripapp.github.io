@@ -1524,17 +1524,12 @@
         const recent = items.slice(0,2);
         area.innerHTML = recent.map(it=>{
           let link = it.url || ('/_posts/' + (it.filename || ''));
-          // If the URL looks like a Jekyll permalink /YYYY/MM/DD/slug.html,
-          // convert to a local _posts filename fallback: YYYY-MM-DD-slug.md
+          // Normalize markdown source paths to Jekyll permalink style.
           try{
-            const m = String(link).match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/(.+?)(?:\.html)?\/?$/);
+            const m = String(link).match(/^\/(?:_posts|posts)\/(\d{4})-(\d{2})-(\d{2})-([^/]+)\.md$/);
             if(m){
               const year = m[1], mon = m[2], day = m[3], slug = decodeURIComponent(m[4]);
-              // sanitize slug: remove trailing slash/empty and replace spaces with '-'
-              const cleanSlug = String(slug).replace(/\/+$/,'').replace(/\s+/g,'-');
-              const filename = `${year}-${mon}-${day}-${cleanSlug}.md`;
-              // prefer the _posts path so the static server can serve the raw markdown
-              link = '/_posts/' + filename;
+              link = `/${year}/${mon}/${day}/${slug}/`;
             }
           }catch(e){}
           const title = (it.title || (link.split('/').pop() || '')).replace(/[-_]/g,' ');
