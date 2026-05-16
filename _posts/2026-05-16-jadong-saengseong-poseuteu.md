@@ -1,13 +1,13 @@
 ---
 layout: post
-title: "2026년 5월 15일 금융 시장 분석 보고서"
+title: "2026년 5월 15일 금융 시장 투자 전망"
 date: 2026-05-16
 description: "2026년 5월 15일 기준으로 주요 금융 지표 및 데이터를 종합하여 투자 점수를 산출하고 향후 투자 방향을 제시합니다."
 tags:
   - "금융"
-  - "시장 분석"
-  - "투자 전략"
-canonical: "https://yourwebsite.com/2026/05/15/financial-market-analysis"
+  - "투자"
+  - "시장 전망"
+  - "데이터 분석"
 ---
 # 종합적인 투자 분석 및 투자 방향 제시
 
@@ -24,10 +24,52 @@ canonical: "https://yourwebsite.com/2026/05/15/financial-market-analysis"
 2026년 5월 15일의 시장은 종가는 79090.0 USD로 기록되었습니다 전일 ETF의 순유출은 -154.2로 부정적인 흐름을 보였습니다.
 
 
+## 주요 지표
+
+
+| 항목 | 값 | 단위 | 시점 | 출처 |
+
+|---|---:|---|---|---|
+
+| 종가 (Close) | 79090.0 | USD | 2026년 5월 15일 | historical_daily_data.close |
+
+| 시가 (Open) | 80830.0 | USD | 2026년 5월 15일 | historical_daily_data.open |
+
+| 최고가 (High) | 80830.0 | USD | 2026년 5월 15일 | historical_daily_data.high |
+
+| 최저가 (Low) | 78600.0 | USD | 2026년 5월 15일 | historical_daily_data.low |
+
+| 거래량 (Volume) | 3377.31064477 | | 2026년 5월 15일 | historical_daily_data.volume |
+
+| MVRV | 1.5068 | | 2026년 5월 15일 | onchain_data.metric.mvrv |
+
+| SOPR |  | | 2026년 5월 15일 | onchain_data.metric.sopr |
+
+| NUPL |  | | 2026년 5월 15일 | onchain_data.metric.nupl |
+
+| CryptoFG value | 43.0 | | 2026년 5월 15일 | cryptofg.value |
+
+| CryptoFG classification | Fear | | 2026년 5월 15일 | cryptofg.value_classification |
+
+| Reddit compound | 0.1935 | | 2026년 5월 15일 | reddit_compound.compound |
+
+| Whale netflow | 16177.56933289 | | 2026년 5월 15일 | whalenetflow_data.netflow |
+
+| Whale supply |  | | 2026년 5월 15일 | whalenetflow_data.supply |
+
+| Whale illiquid |  | | 2026년 5월 15일 | whalenetflow_data.illiquid |
+
+| Whale CDD |  | | 2026년 5월 15일 | whalenetflow_data.cdd |
+
+| Whale reserve |  | | 2026년 5월 15일 | whalenetflow_data.reserve |
+
+
+표에 사용된 수치는 해당 컬렉션 및 필드명으로 표기했습니다.
+
 ### 옵션 지표
 
 
-- BTC 옵션 ATM IV: 43.51%
+- BTC 옵션 ATM IV: 43.52%
 
 
 ### 펀딩 및 이자율
