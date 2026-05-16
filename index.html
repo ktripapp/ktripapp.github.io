@@ -1528,6 +1528,14 @@
           }catch(e){}
           const title = (it.title || (link.split('/').pop() || '')).replace(/[-_]/g,' ');
           const dateHtml = it.date ? `<div style="color:#6b7280;font-size:0.85rem;margin-top:2px;">${(new Date(it.date)).toISOString().slice(0,10)}</div>` : '';
+          // If site is served from GitHub Pages (not localhost), prefer CDN/raw URL
+          try{
+            if(location && location.hostname && location.hostname.indexOf('github.io') !== -1){
+              // prefer jsDelivr CDN for raw markdown to avoid relying on /_posts/ being served
+              var fname = (link.split('/').pop() || '').replace(/^\//,'');
+              if(fname) link = 'https://cdn.jsdelivr.net/gh/ktripapp/ktripapp.github.io@main/_posts/' + fname;
+            }
+          }catch(e){}
           return `<div style="margin-bottom:8px;"><a href="${link}" style="color:#4f46e5;text-decoration:none;font-weight:700;">${title}</a>${dateHtml}</div>`;
         }).join('');
       }catch(e){ try{ area.textContent = '최근 게시물을 불러오지 못했습니다.'; }catch(_){ } }
