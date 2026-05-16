@@ -1581,13 +1581,22 @@
                     candidates.push(root + '_posts/' + filename);
                     candidates.push(root + 'posts/' + filename);
                   });
-                  // Add a few absolute/relative fallbacks (de-duplicated later by fetch loop)
+                  // Add a few absolute/relative fallbacks plus GitHub raw/CDN fallbacks
                   candidates = candidates.concat([
                     '/_posts/' + filename,
                     '/posts/' + filename,
                     './_posts/' + filename,
-                    './posts/' + filename
+                    './posts/' + filename,
+                    // Try serving raw markdown from the repository (works on GitHub Pages)
+                    'https://raw.githubusercontent.com/ktripapp/ktripapp.github.io/main/_posts/' + filename,
+                    'https://raw.githubusercontent.com/ktripapp/ktripapp.github.io/main/posts/' + filename,
+                    // jsDelivr CDN for raw files as an alternative
+                    'https://cdn.jsdelivr.net/gh/ktripapp/ktripapp.github.io@main/_posts/' + filename,
+                    'https://cdn.jsdelivr.net/gh/ktripapp/ktripapp.github.io@main/posts/' + filename
                   ]);
+                  // de-duplicate while preserving order
+                  var seen = Object.create(null);
+                  candidates = candidates.filter(function(u){ if(!u) return false; if(seen[u]) return false; seen[u]=1; return true; });
                   var found = false;
                   for(var i=0;i<candidates.length;i++){
                     try{
